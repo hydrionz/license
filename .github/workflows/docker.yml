@@ -260,6 +260,7 @@ jobs:
         uses: docker/setup-qemu-action@v3
 
       - name: Set up Docker Buildx
+        id: buildx
         uses: docker/setup-buildx-action@v3
 
       - name: Login to Docker Hub
@@ -268,8 +269,8 @@ jobs:
           username: ${{ secrets.HUB_USER }}
           password: ${{ secrets.HUB_PASS }}
 
-      # 分别构建AMD64和ARM64镜像
-      - name: Build AMD64 Docker image
+      # 一次性构建并推送AMD64镜像
+      - name: Build and push AMD64 Docker image
         uses: docker/build-push-action@v5
         with:
           context: docker-context
@@ -279,7 +280,8 @@ jobs:
           build-args: |
             VERSION=${{ needs.pre_check.outputs.version }}
 
-      - name: Build ARM64 Docker image
+      # 一次性构建并推送ARM64镜像
+      - name: Build and push ARM64 Docker image
         uses: docker/build-push-action@v5
         with:
           context: docker-context/arm64
@@ -289,19 +291,30 @@ jobs:
           platforms: linux/arm64
           build-args: |
             VERSION=${{ needs.pre_check.outputs.version }}
-
-      # 创建并推送多架构清单
-      - name: Create and Push Docker manifest
+            
+      # 使用标准Docker命令创建并推送多架构清单
+      - name: Create and push multi-arch manifest
         run: |
-          docker manifest create ${{ secrets.HUB_USER }}/${{ secrets.HUB_REPO }}:${{ needs.pre_check.outputs.version }} \
-            ${{ secrets.HUB_USER }}/${{ secrets.HUB_REPO }}:${{ needs.pre_check.outputs.version }}-amd64 \
-            ${{ secrets.HUB_USER }}/${{ secrets.HUB_REPO }}:${{ needs.pre_check.outputs.version }}-arm64
+          # 启用实验特性以支持manifest命令
+          mkdir -p ~/.docker
+          echo '{"experimental": "enabled"}' > ~/.docker/config.json
+          
+          # 创建并推送版本标签的manifest
+          docker manifest create \
+            ${{ secrets.HUB_USER }}/${{ secrets.HUB_REPO }}:${{ needs.pre_check.outputs.version }} \
+            --amend ${{ secrets.HUB_USER }}/${{ secrets.HUB_REPO }}:${{ needs.pre_check.outputs.version }}-amd64 \
+            --amend ${{ secrets.HUB_USER }}/${{ secrets.HUB_REPO }}:${{ needs.pre_check.outputs.version }}-arm64
             
-          docker manifest create ${{ secrets.HUB_USER }}/${{ secrets.HUB_REPO }}:latest \
-            ${{ secrets.HUB_USER }}/${{ secrets.HUB_REPO }}:${{ needs.pre_check.outputs.version }}-amd64 \
-            ${{ secrets.HUB_USER }}/${{ secrets.HUB_REPO }}:${{ needs.pre_check.outputs.version }}-arm64
-            
+          # 推送版本标签manifest
           docker manifest push ${{ secrets.HUB_USER }}/${{ secrets.HUB_REPO }}:${{ needs.pre_check.outputs.version }}
+          
+          # 创建并推送latest标签的manifest
+          docker manifest create \
+            ${{ secrets.HUB_USER }}/${{ secrets.HUB_REPO }}:latest \
+            --amend ${{ secrets.HUB_USER }}/${{ secrets.HUB_REPO }}:${{ needs.pre_check.outputs.version }}-amd64 \
+            --amend ${{ secrets.HUB_USER }}/${{ secrets.HUB_REPO }}:${{ needs.pre_check.outputs.version }}-arm64
+            
+          # 推送latest标签manifest
           docker manifest push ${{ secrets.HUB_USER }}/${{ secrets.HUB_REPO }}:latest
 
   # 4. 发布Release（只在tag推送时运行或手动指定创建release时运行）

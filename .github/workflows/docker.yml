@@ -1,32 +1,336 @@
-name: DockerImageBuild
+name: Build and Release
 
 on:
-  workflow_dispatch:
+  push:
+    tags:
+      - "v*"  # 只在推送v开头的tag时触发
+  workflow_dispatch:  # 支持手动触发
+    inputs:
+      version_override:
+        description: 'Override version (leave empty to use git tag)'
+        required: false
+        type: string
+      build_docker:
+        description: 'Build and push Docker images'
+        required: false
+        type: boolean
+        default: false
+      create_release:
+        description: 'Create GitHub release'
+        required: false
+        type: boolean
+        default: false
+
+# 使用concurrency确保同时只有一个工作流运行
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
-  build-and-push:
+  # 预检步骤：判断是否继续运行完整工作流
+  pre_check:
+    name: Check Trigger Event
     runs-on: ubuntu-latest
+    outputs:
+      should_run_full_workflow: ${{ steps.check.outputs.should_run }}
+      is_tag_or_release: ${{ steps.check.outputs.is_tag_or_release }}
+      should_create_release: ${{ steps.check.outputs.should_create_release }}
+      version: ${{ steps.get_version.outputs.version }}
     steps:
-      - name: Checkout the repository
-        uses: actions/checkout@v3
+      - name: Check out code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Fetch all history for proper versioning
+      
+      - name: Determine event type
+        id: check
+        run: |
+          echo "Event name: ${{ github.event_name }}"
+          echo "Ref: ${{ github.ref }}"
+          
+          # 如果是tag推送，则运行完整工作流包括Docker和Release
+          if [[ "${{ github.ref }}" == refs/tags/* ]]; then
+            echo "This is a tag push event - will run full workflow"
+            echo "should_run=true" >> $GITHUB_OUTPUT
+            echo "is_tag_or_release=true" >> $GITHUB_OUTPUT
+            echo "should_create_release=true" >> $GITHUB_OUTPUT
+          # 如果是手动触发且指定构建Docker，则运行完整工作流
+          elif [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            echo "This is a manual trigger - will run full workflow"
+            echo "should_run=true" >> $GITHUB_OUTPUT
+            if [[ "${{ github.event.inputs.build_docker }}" == "true" ]]; then
+              echo "is_tag_or_release=true" >> $GITHUB_OUTPUT
+            else
+              echo "is_tag_or_release=false" >> $GITHUB_OUTPUT
+            fi
+            if [[ "${{ github.event.inputs.create_release }}" == "true" ]]; then
+              echo "should_create_release=true" >> $GITHUB_OUTPUT
+            else
+              echo "should_create_release=false" >> $GITHUB_OUTPUT
+            fi
+          else
+            echo "This is an unexpected event - will not run"
+            echo "should_run=false" >> $GITHUB_OUTPUT
+            echo "is_tag_or_release=false" >> $GITHUB_OUTPUT
+            echo "should_create_release=false" >> $GITHUB_OUTPUT
+          fi
+      
+      - name: Get version
+        id: get_version
+        run: |
+          if [ -n "${{ github.event.inputs.version_override }}" ]; then
+            VERSION="${{ github.event.inputs.version_override }}"
+          elif [[ "${{ github.ref }}" == refs/tags/* ]]; then
+            VERSION="${{ github.ref_name }}"
+          else
+            VERSION=$(git describe --tags --abbrev=0 2>/dev/null || echo "1.0.0")
+          fi
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Using version: $VERSION"
+
+  # 1. 测试阶段
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    needs: pre_check
+    if: needs.pre_check.outputs.should_run_full_workflow == 'true'
+    steps:
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.21'
+
+      - name: Check out code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Fetch all history for proper versioning
+
+      - name: Get dependencies
+        run: go mod download
+
+      - name: Run tests
+        run: go test -v ./...
+
+  # 2. 构建可执行文件
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    needs: [pre_check, test]  # 依赖预检和测试
+    if: needs.pre_check.outputs.should_run_full_workflow == 'true'
+    steps:
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.21'
+
+      - name: Check out code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Fetch all history for proper versioning
+      
+      # 编译不同平台的二进制文件
+      - name: Build binaries
+        run: |
+          mkdir -p build
+          
+          # Linux amd64
+          echo "Building for Linux AMD64..."
+          CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags "-s -w -X main.Version=${{ needs.pre_check.outputs.version }}" -o build/license-linux-amd64 ./main.go
+          
+          # Linux arm64
+          echo "Building for Linux ARM64..."
+          CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build -ldflags "-s -w -X main.Version=${{ needs.pre_check.outputs.version }}" -o build/license-linux-arm64 ./main.go
+          
+          # MacOS amd64
+          echo "Building for MacOS AMD64..."
+          CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build -ldflags "-s -w -X main.Version=${{ needs.pre_check.outputs.version }}" -o build/license-darwin-amd64 ./main.go
+          
+          # MacOS arm64
+          echo "Building for MacOS ARM64..."
+          CGO_ENABLED=0 GOOS=darwin GOARCH=arm64 go build -ldflags "-s -w -X main.Version=${{ needs.pre_check.outputs.version }}" -o build/license-darwin-arm64 ./main.go
+          
+          # Windows amd64
+          echo "Building for Windows AMD64..."
+          CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -ldflags "-s -w -X main.Version=${{ needs.pre_check.outputs.version }}" -o build/license-windows-amd64.exe ./main.go
+          
+          # List all built files
+          ls -la build/
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: binaries
+          path: build/
+
+  # 3. 构建Docker镜像（只在tag或手动触发时运行）
+  docker:
+    name: Build and Push Docker image
+    runs-on: ubuntu-latest
+    needs: [pre_check, build]  # 依赖预检和构建
+    if: needs.pre_check.outputs.is_tag_or_release == 'true'
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Fetch all history for proper versioning
+
+      # 下载构建的二进制文件
+      - name: Download binaries
+        uses: actions/download-artifact@v4
+        with:
+          name: binaries
+          path: build
+
+      # 准备Docker构建上下文
+      - name: Prepare build context
+        run: |
+          # 创建构建上下文目录
+          mkdir -p docker-context
+          
+          # 复制Dockerfile
+          cp Dockerfile docker-context/
+          
+          # 创建二进制文件目录
+          mkdir -p docker-context/bin
+          
+          # 复制Linux二进制文件到Docker构建上下文
+          cp build/license-linux-amd64 docker-context/bin/
+          cp build/license-linux-arm64 docker-context/bin/
+          
+          # 创建更优化的Dockerfile
+          cat > docker-context/Dockerfile << EOF
+          FROM alpine:latest
+          
+          ARG VERSION=${{ needs.pre_check.outputs.version }}
+          
+          WORKDIR /app
+          
+          # 复制预编译的二进制文件（根据平台自动选择）
+          COPY bin/license-linux-amd64 /app/bin/license-linux-amd64
+          COPY bin/license-linux-arm64 /app/bin/license-linux-arm64
+          
+          # 设置 TARGETPLATFORM 环境变量以在运行时使用
+          ARG TARGETPLATFORM
+          ENV TARGETPLATFORM=\${TARGETPLATFORM:-linux/amd64}
+          
+          # 根据平台选择正确的二进制文件
+          RUN if [ "\${TARGETPLATFORM}" = "linux/arm64" ]; then \\
+                cp /app/bin/license-linux-arm64 /app/license; \\
+              else \\
+                cp /app/bin/license-linux-amd64 /app/license; \\
+              fi && \\
+              chmod +x /app/license && \\
+              apk update && \\
+              apk upgrade && \\
+              apk add --no-cache ca-certificates tzdata && \\
+              update-ca-certificates 2>/dev/null || true && \\
+              mkdir -p /data
+          
+          ENTRYPOINT ["/app/license"]
+          EOF
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
+        uses: docker/setup-buildx-action@v3
 
-      - name: Log in to Docker Hub
-        uses: docker/login-action@v1
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
         with:
           username: ${{ secrets.HUB_USER }}
           password: ${{ secrets.HUB_PASS }}
 
-      - name: Build and push Docker images
-        uses: docker/build-push-action@v3
+      - name: Build and push with optimized Dockerfile
+        uses: docker/build-push-action@v5
         with:
-          context: .
-          file: ./Dockerfile
+          context: docker-context
           push: true
           tags: |
-            ${{ secrets.HUB_USER }}/${{ secrets.HUB_REPO }}:${{ vars.VERSION }}
+            ${{ secrets.HUB_USER }}/${{ secrets.HUB_REPO }}:${{ needs.pre_check.outputs.version }}
             ${{ secrets.HUB_USER }}/${{ secrets.HUB_REPO }}:latest
-          platforms: linux/amd64, linux/arm64
+          platforms: linux/amd64,linux/arm64
+          build-args: |
+            VERSION=${{ needs.pre_check.outputs.version }}
+
+  # 4. 发布Release（只在tag推送时运行或手动指定创建release时运行）
+  release:
+    name: Publish Release
+    runs-on: ubuntu-latest
+    needs: [pre_check, build, docker]  # 依赖预检、构建和Docker
+    if: needs.pre_check.outputs.is_tag_or_release == 'true' && (startsWith(github.ref, 'refs/tags/') || needs.pre_check.outputs.should_create_release == 'true')
+    permissions:
+      contents: write
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Fetch all history for proper versioning
+
+      - name: Download binaries
+        uses: actions/download-artifact@v4
+        with:
+          name: binaries
+          path: build
+
+      - name: Create checksums
+        run: |
+          cd build
+          # 为所有二进制文件创建校验和
+          find . -type f -not -name "checksums.txt" -exec shasum -a 256 {} \; > checksums.txt
+          cat checksums.txt
+
+      - name: Get previous tag
+        id: previoustag
+        run: |
+          # 获取当前标签
+          CURRENT_TAG="${{ needs.pre_check.outputs.version }}"
+          echo "current_tag=$CURRENT_TAG" >> $GITHUB_OUTPUT
+          
+          # 获取上一个标签
+          PREVIOUS_TAG=$(git describe --tags --abbrev=0 $CURRENT_TAG^ 2>/dev/null || echo "")
+          echo "previous_tag=$PREVIOUS_TAG" >> $GITHUB_OUTPUT
+          
+          echo "Current tag: $CURRENT_TAG"
+          echo "Previous tag: $PREVIOUS_TAG"
+
+      - name: Generate Release Body
+        id: release_body
+        run: |
+          CURRENT_TAG="${{ steps.previoustag.outputs.current_tag }}"
+          PREVIOUS_TAG="${{ steps.previoustag.outputs.previous_tag }}"
+          
+          # 移除标题，避免重复
+          echo "## 📝 Changelog" > release_body.md
+          echo "" >> release_body.md
+          
+          if [ -n "$PREVIOUS_TAG" ]; then
+            echo "Full Changelog: [$PREVIOUS_TAG...$CURRENT_TAG](https://github.com/${{ github.repository }}/compare/$PREVIOUS_TAG...$CURRENT_TAG)" >> release_body.md
+            echo "" >> release_body.md
+            
+            # 获取提交日志并分类
+            echo "### 🚀 Features" >> release_body.md
+            git log --pretty=format:"* %s" $PREVIOUS_TAG..$CURRENT_TAG | grep -i "feat\|feature\|新增\|添加" >> release_body.md || echo "* No new features" >> release_body.md
+            echo "" >> release_body.md
+            
+            echo "### 🐛 Bug Fixes" >> release_body.md
+            git log --pretty=format:"* %s" $PREVIOUS_TAG..$CURRENT_TAG | grep -i "fix\|修复\|bug" >> release_body.md || echo "* No bug fixes" >> release_body.md
+            echo "" >> release_body.md
+            
+            echo "### ♻️ Other Changes" >> release_body.md
+            git log --pretty=format:"* %s" $PREVIOUS_TAG..$CURRENT_TAG | grep -v -i "feat\|feature\|fix\|bug\|新增\|添加\|修复" >> release_body.md || echo "* No other changes" >> release_body.md
+          else
+            echo "🎉 First Release" >> release_body.md
+          fi
+      
+      - name: Release
+        uses: ncipollo/release-action@v1
+        with:
+          tag: ${{ needs.pre_check.outputs.version }}
+          name: ${{ needs.pre_check.outputs.version }}
+          artifacts: "build/*"
+          allowUpdates: true
+          makeLatest: true
+          replacesArtifacts: true
+          bodyFile: release_body.md
 

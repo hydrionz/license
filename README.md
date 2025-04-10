@@ -7,6 +7,7 @@ A Go-based service for managing software license validation and authentication.
 ![GitHub stars](https://img.shields.io/github/stars/nannanStrawberry314/license?color=orange)
 ![GitHub pull requests](https://img.shields.io/github/issues-pr/nannanStrawberry314/license?color=red)
 ![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/nannanStrawberry314/license/.github/workflows/release.yml?label=build)
+![GitHub Release](https://img.shields.io/github/v/release/nannanStrawberry314/license?color=brightgreen)
 ![Docker Pulls](https://img.shields.io/docker/pulls/raspberrycheese/license?color=blueviolet)
 
 [English](README.md) | [中文](README_CN.md)

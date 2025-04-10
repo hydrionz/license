@@ -210,40 +210,17 @@ jobs:
           cp build/license-linux-amd64 docker-context/bin/
           cp build/license-linux-arm64 docker-context/bin/
           
-          # 创建AMD64平台的Dockerfile
+          # 创建智能Dockerfile，自动根据平台选择二进制文件
           cat > docker-context/Dockerfile << EOF
           FROM alpine:latest
           
           ARG VERSION=${{ needs.pre_check.outputs.version }}
+          ARG TARGETARCH
           
           WORKDIR /app
           
-          # 复制预编译的二进制文件
-          COPY bin/license-linux-amd64 /app/license
-          
-          # 安装需要的依赖
-          RUN chmod +x /app/license && \\
-              apk update && \\
-              apk upgrade && \\
-              apk add --no-cache ca-certificates tzdata sqlite sqlite-dev && \\
-              update-ca-certificates 2>/dev/null || true && \\
-              mkdir -p /data
-          
-          ENTRYPOINT ["/app/license"]
-          EOF
-          
-          # 创建ARM64平台的Dockerfile
-          mkdir -p docker-context/arm64
-          cp build/license-linux-arm64 docker-context/arm64/
-          cat > docker-context/arm64/Dockerfile << EOF
-          FROM --platform=linux/arm64 alpine:latest
-          
-          ARG VERSION=${{ needs.pre_check.outputs.version }}
-          
-          WORKDIR /app
-          
-          # 复制预编译的二进制文件
-          COPY license-linux-arm64 /app/license
+          # 复制对应架构的预编译二进制文件
+          COPY bin/license-linux-\${TARGETARCH} /app/license
           
           # 安装需要的依赖
           RUN chmod +x /app/license && \\
@@ -269,53 +246,18 @@ jobs:
           username: ${{ secrets.HUB_USER }}
           password: ${{ secrets.HUB_PASS }}
 
-      # 一次性构建并推送AMD64镜像
-      - name: Build and push AMD64 Docker image
+      # 使用buildx一步构建多架构镜像
+      - name: Build and push multi-arch Docker image
         uses: docker/build-push-action@v5
         with:
           context: docker-context
           push: true
-          tags: ${{ secrets.HUB_USER }}/${{ secrets.HUB_REPO }}:${{ needs.pre_check.outputs.version }}-amd64
-          platforms: linux/amd64
+          tags: |
+            ${{ secrets.HUB_USER }}/${{ secrets.HUB_REPO }}:${{ needs.pre_check.outputs.version }}
+            ${{ secrets.HUB_USER }}/${{ secrets.HUB_REPO }}:latest
+          platforms: linux/amd64,linux/arm64
           build-args: |
             VERSION=${{ needs.pre_check.outputs.version }}
-
-      # 一次性构建并推送ARM64镜像
-      - name: Build and push ARM64 Docker image
-        uses: docker/build-push-action@v5
-        with:
-          context: docker-context/arm64
-          file: docker-context/arm64/Dockerfile
-          push: true
-          tags: ${{ secrets.HUB_USER }}/${{ secrets.HUB_REPO }}:${{ needs.pre_check.outputs.version }}-arm64
-          platforms: linux/arm64
-          build-args: |
-            VERSION=${{ needs.pre_check.outputs.version }}
-            
-      # 使用标准Docker命令创建并推送多架构清单
-      - name: Create and push multi-arch manifest
-        run: |
-          # 启用实验特性以支持manifest命令
-          mkdir -p ~/.docker
-          echo '{"experimental": "enabled"}' > ~/.docker/config.json
-          
-          # 创建并推送版本标签的manifest
-          docker manifest create \
-            ${{ secrets.HUB_USER }}/${{ secrets.HUB_REPO }}:${{ needs.pre_check.outputs.version }} \
-            --amend ${{ secrets.HUB_USER }}/${{ secrets.HUB_REPO }}:${{ needs.pre_check.outputs.version }}-amd64 \
-            --amend ${{ secrets.HUB_USER }}/${{ secrets.HUB_REPO }}:${{ needs.pre_check.outputs.version }}-arm64
-            
-          # 推送版本标签manifest
-          docker manifest push ${{ secrets.HUB_USER }}/${{ secrets.HUB_REPO }}:${{ needs.pre_check.outputs.version }}
-          
-          # 创建并推送latest标签的manifest
-          docker manifest create \
-            ${{ secrets.HUB_USER }}/${{ secrets.HUB_REPO }}:latest \
-            --amend ${{ secrets.HUB_USER }}/${{ secrets.HUB_REPO }}:${{ needs.pre_check.outputs.version }}-amd64 \
-            --amend ${{ secrets.HUB_USER }}/${{ secrets.HUB_REPO }}:${{ needs.pre_check.outputs.version }}-arm64
-            
-          # 推送latest标签manifest
-          docker manifest push ${{ secrets.HUB_USER }}/${{ secrets.HUB_REPO }}:latest
 
   # 4. 发布Release（只在tag推送时运行或手动指定创建release时运行）
   release:

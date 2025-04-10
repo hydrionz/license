@@ -1,4 +1,4 @@
-name: Build and Release
+name: Release
 
 on:
   push:
@@ -179,12 +179,12 @@ jobs:
           ls -la build/
           file build/*
 
-      # 上传构建的Linux二进制文件
+      # 上传所有平台的二进制文件
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
           name: binaries
-          path: build/license-linux-*
+          path: build/*
 
   # 3. 构建Docker镜像（只在tag或手动触发时运行）
   docker:

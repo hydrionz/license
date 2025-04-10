@@ -146,23 +146,28 @@ jobs:
         run: |
           mkdir -p build
           
-          # Linux amd64
-          echo "Building for Linux AMD64..."
-          CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags "-s -w -X main.Version=${{ needs.pre_check.outputs.version }}" -o build/license-linux-amd64 ./main.go
+          # 安装编译所需的依赖
+          sudo apt-get update
+          sudo apt-get install -y gcc libsqlite3-dev musl-dev
           
-          # Linux arm64
+          # Linux amd64 (使用CGO构建，支持SQLite)
+          echo "Building for Linux AMD64..."
+          CGO_ENABLED=1 GOOS=linux GOARCH=amd64 go build -ldflags "-s -w -X main.Version=${{ needs.pre_check.outputs.version }}" -o build/license-linux-amd64 ./main.go
+          
+          # 注意：ARM64 暂时使用CGO_ENABLED=0构建，在Docker镜像中提供SQLite依赖
+          # 交叉编译CGO应用需要更复杂的设置
           echo "Building for Linux ARM64..."
           CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build -ldflags "-s -w -X main.Version=${{ needs.pre_check.outputs.version }}" -o build/license-linux-arm64 ./main.go
           
-          # MacOS amd64
+          # MacOS amd64 (注意: 交叉编译可能需要特殊处理)
           echo "Building for MacOS AMD64..."
           CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build -ldflags "-s -w -X main.Version=${{ needs.pre_check.outputs.version }}" -o build/license-darwin-amd64 ./main.go
           
-          # MacOS arm64
+          # MacOS arm64 (注意: 交叉编译可能需要特殊处理)
           echo "Building for MacOS ARM64..."
           CGO_ENABLED=0 GOOS=darwin GOARCH=arm64 go build -ldflags "-s -w -X main.Version=${{ needs.pre_check.outputs.version }}" -o build/license-darwin-arm64 ./main.go
           
-          # Windows amd64
+          # Windows amd64 (注意: 交叉编译可能需要特殊处理)
           echo "Building for Windows AMD64..."
           CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -ldflags "-s -w -X main.Version=${{ needs.pre_check.outputs.version }}" -o build/license-windows-amd64.exe ./main.go
           
@@ -200,17 +205,12 @@ jobs:
           # 创建构建上下文目录
           mkdir -p docker-context
           
-          # 复制Dockerfile
-          cp Dockerfile docker-context/
-          
-          # 创建二进制文件目录
+          # 复制二进制文件
           mkdir -p docker-context/bin
-          
-          # 复制Linux二进制文件到Docker构建上下文
           cp build/license-linux-amd64 docker-context/bin/
           cp build/license-linux-arm64 docker-context/bin/
           
-          # 创建更优化的Dockerfile
+          # 创建AMD64平台的Dockerfile
           cat > docker-context/Dockerfile << EOF
           FROM alpine:latest
           
@@ -218,24 +218,38 @@ jobs:
           
           WORKDIR /app
           
-          # 复制预编译的二进制文件（根据平台自动选择）
-          COPY bin/license-linux-amd64 /app/bin/license-linux-amd64
-          COPY bin/license-linux-arm64 /app/bin/license-linux-arm64
+          # 复制预编译的二进制文件
+          COPY bin/license-linux-amd64 /app/license
           
-          # 设置 TARGETPLATFORM 环境变量以在运行时使用
-          ARG TARGETPLATFORM
-          ENV TARGETPLATFORM=\${TARGETPLATFORM:-linux/amd64}
-          
-          # 根据平台选择正确的二进制文件
-          RUN if [ "\${TARGETPLATFORM}" = "linux/arm64" ]; then \\
-                cp /app/bin/license-linux-arm64 /app/license; \\
-              else \\
-                cp /app/bin/license-linux-amd64 /app/license; \\
-              fi && \\
-              chmod +x /app/license && \\
+          # 安装需要的依赖
+          RUN chmod +x /app/license && \\
               apk update && \\
               apk upgrade && \\
-              apk add --no-cache ca-certificates tzdata && \\
+              apk add --no-cache ca-certificates tzdata sqlite sqlite-dev && \\
+              update-ca-certificates 2>/dev/null || true && \\
+              mkdir -p /data
+          
+          ENTRYPOINT ["/app/license"]
+          EOF
+          
+          # 创建ARM64平台的Dockerfile
+          mkdir -p docker-context/arm64
+          cp build/license-linux-arm64 docker-context/arm64/
+          cat > docker-context/arm64/Dockerfile << EOF
+          FROM --platform=linux/arm64 alpine:latest
+          
+          ARG VERSION=${{ needs.pre_check.outputs.version }}
+          
+          WORKDIR /app
+          
+          # 复制预编译的二进制文件
+          COPY license-linux-arm64 /app/license
+          
+          # 安装需要的依赖
+          RUN chmod +x /app/license && \\
+              apk update && \\
+              apk upgrade && \\
+              apk add --no-cache ca-certificates tzdata sqlite sqlite-dev && \\
               update-ca-certificates 2>/dev/null || true && \\
               mkdir -p /data
           
@@ -254,17 +268,41 @@ jobs:
           username: ${{ secrets.HUB_USER }}
           password: ${{ secrets.HUB_PASS }}
 
-      - name: Build and push with optimized Dockerfile
+      # 分别构建AMD64和ARM64镜像
+      - name: Build AMD64 Docker image
         uses: docker/build-push-action@v5
         with:
           context: docker-context
           push: true
-          tags: |
-            ${{ secrets.HUB_USER }}/${{ secrets.HUB_REPO }}:${{ needs.pre_check.outputs.version }}
-            ${{ secrets.HUB_USER }}/${{ secrets.HUB_REPO }}:latest
-          platforms: linux/amd64,linux/arm64
+          tags: ${{ secrets.HUB_USER }}/${{ secrets.HUB_REPO }}:${{ needs.pre_check.outputs.version }}-amd64
+          platforms: linux/amd64
           build-args: |
             VERSION=${{ needs.pre_check.outputs.version }}
+
+      - name: Build ARM64 Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: docker-context/arm64
+          file: docker-context/arm64/Dockerfile
+          push: true
+          tags: ${{ secrets.HUB_USER }}/${{ secrets.HUB_REPO }}:${{ needs.pre_check.outputs.version }}-arm64
+          platforms: linux/arm64
+          build-args: |
+            VERSION=${{ needs.pre_check.outputs.version }}
+
+      # 创建并推送多架构清单
+      - name: Create and Push Docker manifest
+        run: |
+          docker manifest create ${{ secrets.HUB_USER }}/${{ secrets.HUB_REPO }}:${{ needs.pre_check.outputs.version }} \
+            ${{ secrets.HUB_USER }}/${{ secrets.HUB_REPO }}:${{ needs.pre_check.outputs.version }}-amd64 \
+            ${{ secrets.HUB_USER }}/${{ secrets.HUB_REPO }}:${{ needs.pre_check.outputs.version }}-arm64
+            
+          docker manifest create ${{ secrets.HUB_USER }}/${{ secrets.HUB_REPO }}:latest \
+            ${{ secrets.HUB_USER }}/${{ secrets.HUB_REPO }}:${{ needs.pre_check.outputs.version }}-amd64 \
+            ${{ secrets.HUB_USER }}/${{ secrets.HUB_REPO }}:${{ needs.pre_check.outputs.version }}-arm64
+            
+          docker manifest push ${{ secrets.HUB_USER }}/${{ secrets.HUB_REPO }}:${{ needs.pre_check.outputs.version }}
+          docker manifest push ${{ secrets.HUB_USER }}/${{ secrets.HUB_REPO }}:latest
 
   # 4. 发布Release（只在tag推送时运行或手动指定创建release时运行）
   release:

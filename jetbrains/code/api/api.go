@@ -19,22 +19,34 @@ func NewController() *Controller {
 
 // FetchProduceLatest 用于获取最新的激活码
 func (controller *Controller) FetchProduceLatest(c *gin.Context) {
-	productService := service.NewProductService()
-	err := productService.FetchLatest()
-	if err != nil {
-		logger.Error("Failed to fetch latest product:", err)
-		return
-	}
+	go func() {
+		productService := service.NewProductService()
+		err := productService.FetchLatest()
+		if err != nil {
+			logger.Error("Failed to fetch latest product:", err)
+			return
+		}
+	}()
+	
+	c.JSON(200, gin.H{
+		"message": "Fetching latest products in background",
+	})
 }
 
 // FetchPluginLatest 用于获取最新的插件
 func (controller *Controller) FetchPluginLatest(c *gin.Context) {
-	pluginService := service.NewPluginService()
-	err := pluginService.FetchLatest()
-	if err != nil {
-		logger.Error("Failed to fetch latest plugin:", err)
-		return
-	}
+	go func() {
+		pluginService := service.NewPluginService()
+		err := pluginService.FetchLatest()
+		if err != nil {
+			logger.Error("Failed to fetch latest plugin:", err)
+			return
+		}
+	}()
+	
+	c.JSON(200, gin.H{
+		"message": "Fetching latest plugins in background",
+	})
 }
 
 // Generate 用于生成激活码

@@ -1,11 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Typography, Form, Button, Alert, Divider, Card, Space, message, Input, Radio } from 'antd';
+import { Typography, Form, Button, Alert, Card, Space, message, Input, Radio } from 'antd';
 import styled from 'styled-components';
 import { 
   LoadingOutlined, 
-  CodeOutlined, 
-  SyncOutlined,
-  CheckCircleOutlined,
   InfoCircleOutlined,
   CopyOutlined,
   CheckOutlined
@@ -28,69 +25,11 @@ const FormCard = styled(Card)`
   }
 `;
 
-const InfoBox = styled.div`
-  background-color: #f0f5ff;
-  border: 1px solid #e0e7ff;
-  border-radius: 8px;
-  padding: 16px;
-  margin-bottom: 24px;
-`;
-
-const UpdateBox = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  background-color: #f0fdf4;
-  border: 1px solid #dcfce7;
-  border-radius: 8px;
-  padding: 16px;
-  margin-bottom: 24px;
-`;
-
-const UpdateInfo = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 8px;
-`;
-
 const SubmitButton = styled(Button)`
   width: 100%;
   height: 40px;
   border-radius: 8px;
   margin-top: 8px;
-`;
-
-const SectionTitle = styled.h2`
-  font-size: 18px;
-  font-weight: 600;
-  margin-bottom: 16px;
-  color: #111827;
-  display: flex;
-  align-items: center;
-  
-  svg {
-    margin-right: 8px;
-    color: #2563eb;
-  }
-`;
-
-const PluginList = styled.div`
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 16px;
-  
-  @media (max-width: 768px) {
-    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-  }
-`;
-
-const PluginItem = styled.div`
-  padding: 12px;
-  border-radius: 8px;
-  background-color: #f9fafb;
-  border: 1px solid #e5e7eb;
-  font-size: 14px;
-  color: #4b5563;
 `;
 
 const LicenseContent = styled.div`
@@ -139,44 +78,34 @@ const LabelText = styled(Text)`
 `;
 
 const JetBrains: React.FC = () => {
-  const [plugins, setPlugins] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [license, setLicense] = useState<JetBrainsLicense | null>(null);
   const [rawResponse, setRawResponse] = useState<string | null>(null);
   const [serverRule, setServerRule] = useState<string>('');
-  const [updating, setUpdating] = useState(false);
-  const [lastUpdated, setLastUpdated] = useState<string | null>(null);
+  const [loadingServerRule, setLoadingServerRule] = useState(false);
   const [activationMethod, setActivationMethod] = useState<'code' | 'server'>('code');
   const [copying, setCopying] = useState<{[key: string]: boolean}>({});
   const [codeForm] = Form.useForm();
 
-  // 页面初始加载时只获取服务器规则，不获取产品和插件列表
+  // 当用户切换到服务器激活模式时，获取服务器规则
   useEffect(() => {
-    const fetchServerRule = async () => {
-      try {
-        const serverRuleText = await jetbrains.getLicenseServerRule();
-        setServerRule(serverRuleText);
-      } catch (error) {
-        console.error('获取服务器规则失败:', error);
-      }
-    };
-
-    fetchServerRule();
-  }, []);
-
-  const fetchData = async () => {
-    setUpdating(true);
-    
-    try {
-      const pluginList = await jetbrains.fetchPluginList();
-      setPlugins(pluginList);
-      setLastUpdated(new Date().toLocaleString());
-    } catch (error) {
-      console.error('获取数据失败:', error);
-    } finally {
-      setUpdating(false);
+    if (activationMethod === 'server' && !serverRule && !loadingServerRule) {
+      setLoadingServerRule(true);
+      
+      const fetchServerRule = async () => {
+        try {
+          const serverRuleText = await jetbrains.getLicenseServerRule();
+          setServerRule(serverRuleText);
+        } catch (error) {
+          console.error('获取服务器规则失败:', error);
+        } finally {
+          setLoadingServerRule(false);
+        }
+      };
+  
+      fetchServerRule();
     }
-  };
+  }, [activationMethod, serverRule, loadingServerRule]);
 
   const handleGenerateLicense = async (values: { 
     licenseeName?: string, 
@@ -301,42 +230,6 @@ const JetBrains: React.FC = () => {
         breadcrumbs={breadcrumbs}
       />
 
-      <InfoBox>
-        <Text>
-          JetBrains提供了一系列强大的开发工具，包括IntelliJ IDEA、WebStorm、PyCharm等。
-          本工具提供两种激活方式：激活码激活和在线服务器激活。请选择您需要的激活方式。
-        </Text>
-      </InfoBox>
-      
-      <UpdateBox>
-        <UpdateInfo>
-          {lastUpdated ? (
-            <>
-              <CheckCircleOutlined style={{ color: '#10b981' }} />
-              <Text>
-                插件列表最后更新时间: {lastUpdated}
-              </Text>
-            </>
-          ) : (
-            <>
-              <InfoCircleOutlined style={{ color: '#2563eb' }} />
-              <Text>
-                请点击右侧按钮获取JetBrains插件列表
-              </Text>
-            </>
-          )}
-        </UpdateInfo>
-        <Button 
-          type="primary" 
-          ghost
-          icon={updating ? <LoadingOutlined /> : <SyncOutlined />} 
-          loading={updating}
-          onClick={fetchData}
-        >
-          {updating ? '更新中...' : '获取插件列表'}
-        </Button>
-      </UpdateBox>
-      
       <FormCard title="JetBrains 激活工具">
         <Radio.Group 
           value={activationMethod} 
@@ -388,23 +281,23 @@ const JetBrains: React.FC = () => {
         ) : (
           <div>
             <Paragraph>
-              您也可以通过配置激活服务器的方式激活JetBrains产品。复制下面的服务器地址到JetBrains激活服务器设置中：
+              您也可以通过配置激活服务器的方式激活JetBrains产品。复制下面的power.conf配置到JetBrains激活服务器设置中：
             </Paragraph>
 
             {serverRule ? (
               <ResultCard
-                title="激活服务器地址"
+                title="服务器激活配置"
                 data={{
-                  '服务器地址': serverRule,
+                  'power.conf配置': serverRule,
                 }}
                 fileName="jetbrains-server-config.txt"
               />
             ) : (
               <Alert
-                message="正在加载服务器规则，请稍候..."
+                message={loadingServerRule ? "正在加载服务器规则，请稍候..." : "点击服务器激活选项后将自动加载服务器规则"}
                 type="info"
                 showIcon
-                icon={<LoadingOutlined />}
+                icon={loadingServerRule ? <LoadingOutlined /> : <InfoCircleOutlined />}
               />
             )}
           </div>
@@ -456,34 +349,6 @@ const JetBrains: React.FC = () => {
           </Space>
         </LicenseResultCard>
       )}
-
-      <Divider />
-
-      <div style={{ marginTop: 32 }}>
-        <SectionTitle>
-          <CodeOutlined /> 可用插件列表
-        </SectionTitle>
-        <Space direction="vertical" style={{ width: '100%' }}>
-          <Paragraph>
-            以下是可激活的JetBrains插件列表：
-          </Paragraph>
-          
-          {plugins.length > 0 ? (
-            <PluginList>
-              {plugins.map((plugin) => (
-                <PluginItem key={plugin}>{plugin}</PluginItem>
-              ))}
-            </PluginList>
-          ) : (
-            <Alert
-              message="请点击上方「获取插件列表」按钮获取插件列表"
-              type="info"
-              showIcon
-              icon={<InfoCircleOutlined />}
-            />
-          )}
-        </Space>
-      </div>
     </div>
   );
 };

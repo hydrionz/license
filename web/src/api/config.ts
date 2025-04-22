@@ -23,6 +23,12 @@ const api = {
         return response.data as T;
       }
       
+      // 特殊处理服务器规则接口，不再期望ApiResponse包装
+      if (url.includes('/jetbrains/licenseServerRule')) {
+        // 直接返回接口响应内容
+        return response.data as T;
+      }
+      
       const apiResponse = response.data as ApiResponse<T>;
       
       if (apiResponse.status !== 0) {

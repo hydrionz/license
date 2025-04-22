@@ -62,6 +62,8 @@ const zhCN = {
     pleaseEnterProductCode: '请输入产品代码，多个产品用逗号分隔',
     generateActivationCode: '生成授权码',
     serverActivationDescription: '您也可以通过配置授权服务器的方式使用JetBrains产品。复制下面的power.conf配置到JetBrains授权服务器设置中：',
+    serverAddress: '服务器地址',
+    serverAddressTooltip: '当前浏览器访问的服务器地址，用于配置JetBrains产品的授权服务器',
     serverConfig: '服务器授权配置',
     loadingServerRule: '正在加载服务器规则，请稍候...',
     serverRuleAutoload: '点击服务器授权选项后将自动加载服务器规则',

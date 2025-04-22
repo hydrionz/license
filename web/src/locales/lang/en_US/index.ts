@@ -62,6 +62,8 @@ const enUS = {
     pleaseEnterProductCode: 'Please enter product code, separate multiple products with commas',
     generateActivationCode: 'Generate Authorization Code',
     serverActivationDescription: 'You can also use JetBrains products by configuring an authorization server. Copy the power.conf configuration below to the JetBrains authorization server settings:',
+    serverAddress: 'Server Address',
+    serverAddressTooltip: 'Current server address accessed by the browser, used to configure the authorization server for JetBrains products',
     serverConfig: 'Server Authorization Configuration',
     loadingServerRule: 'Loading server rules, please wait...',
     serverRuleAutoload: 'Server rules will be automatically loaded after clicking the server authorization option',

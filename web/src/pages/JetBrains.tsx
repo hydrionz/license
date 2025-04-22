@@ -88,6 +88,13 @@ const JetBrains: React.FC = () => {
   const [activationMethod, setActivationMethod] = useState<'code' | 'server'>('code');
   const [copying, setCopying] = useState<{[key: string]: boolean}>({});
   const [codeForm] = Form.useForm();
+  const [serverAddress, setServerAddress] = useState<string>('');
+
+  // Get browser's host address when component mounts
+  useEffect(() => {
+    const host = window.location.host;
+    setServerAddress(`http://${host}`);
+  }, []);
 
   // 当用户切换到服务器激活模式时，获取服务器规则
   useEffect(() => {
@@ -285,6 +292,38 @@ const JetBrains: React.FC = () => {
             <Paragraph>
               {t('jetbrains.serverActivationDescription')}
             </Paragraph>
+
+            <Form layout="vertical" style={{ marginBottom: 16 }}>
+              <Form.Item 
+                label={t('jetbrains.serverAddress')} 
+                tooltip={t('jetbrains.serverAddressTooltip')}
+              >
+                <div style={{ position: 'relative' }}>
+                  <Input 
+                    value={serverAddress}
+                    readOnly
+                    style={{ 
+                      backgroundColor: '#f5f5f5', 
+                      cursor: 'default',
+                      paddingRight: '40px' 
+                    }}
+                  />
+                  <Button 
+                    type="text" 
+                    icon={copying['serverAddress'] ? <CheckOutlined /> : <CopyOutlined />} 
+                    onClick={() => copyToClipboard('serverAddress', serverAddress)}
+                    style={{ 
+                      position: 'absolute', 
+                      right: '8px', 
+                      top: '50%', 
+                      transform: 'translateY(-50%)',
+                      border: 'none',
+                      backgroundColor: 'transparent'
+                    }}
+                  />
+                </div>
+              </Form.Item>
+            </Form>
 
             {serverRule ? (
               <ResultCard

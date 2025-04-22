@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
-import { Typography, Form, Button, Input, Alert } from 'antd';
+import { Typography, Form, Button, Input, Alert, Card, Row, Col, Divider } from 'antd';
 import styled from 'styled-components';
+import { useTranslation } from 'react-i18next';
+import { CopyOutlined, CheckOutlined } from '@ant-design/icons';
 import PageHeader from '../components/PageHeader';
-import ResultCard from '../components/ResultCard';
 import { finalshell } from '../api';
-import { FinalShellLicense } from '../types';
 
 const { Paragraph } = Typography;
 
@@ -13,16 +13,83 @@ const FormWrapper = styled.div`
   margin-bottom: 32px;
 `;
 
+const FormCard = styled(Card)`
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  margin-bottom: 32px;
+  border: 1px solid #e5e7eb;
+  
+  .ant-card-head {
+    border-bottom: 1px solid #e5e7eb;
+  }
+`;
+
+const StepItem = styled.div`
+  margin-bottom: 16px;
+  display: flex;
+  align-items: flex-start;
+`;
+
+const StepNumber = styled.span`
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 24px;
+  height: 24px;
+  background-color: #1890ff;
+  color: #fff;
+  border-radius: 50%;
+  margin-right: 12px;
+  font-size: 14px;
+  flex-shrink: 0;
+`;
+
+const StepContent = styled.div`
+  flex: 1;
+`;
+
+const RegistrationCodeContainer = styled.div`
+  position: relative;
+  background-color: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 16px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  overflow-wrap: break-word;
+  word-break: break-all;
+`;
+
+const CopyButton = styled(Button)`
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  opacity: 0.8;
+  z-index: 2;
+  
+  &:hover {
+    opacity: 1;
+  }
+`;
+
+const CodeLabel = styled.div`
+  font-weight: 600;
+  margin-bottom: 4px;
+  color: #4b5563;
+`;
+
 const FinalShell: React.FC = () => {
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
-  const [license, setLicense] = useState<FinalShellLicense | null>(null);
+  const [registrationCodes, setRegistrationCodes] = useState<string[]>([]);
+  const [copying, setCopying] = useState<{[key: string]: boolean}>({});
   const [form] = Form.useForm();
 
-  const handleGenerateLicense = async (values: { username: string }) => {
+  const handleGenerateLicense = async (values: { machineCode: string }) => {
     setLoading(true);
     try {
-      const data = await finalshell.generateLicense(values.username);
-      setLicense(data);
+      const data = await finalshell.generateLicense(values.machineCode);
+      setRegistrationCodes(data);
     } catch (error) {
       console.error('生成许可证失败:', error);
     } finally {
@@ -30,32 +97,66 @@ const FinalShell: React.FC = () => {
     }
   };
 
+  // 复制到剪贴板
+  const copyToClipboard = (key: string, text: string) => {
+    navigator.clipboard.writeText(text).then(() => {
+      setCopying({ ...copying, [key]: true });
+      
+      setTimeout(() => {
+        setCopying({ ...copying, [key]: false });
+      }, 2000);
+    });
+  };
+
   const breadcrumbs = [
     {
       path: '/',
-      breadcrumbName: '首页',
+      breadcrumbName: t('nav.home'),
     },
     {
       path: '',
-      breadcrumbName: 'FinalShell 注册机',
+      breadcrumbName: t('nav.finalshell'),
     },
   ];
+
+  // 解析注册码字符串
+  const parseRegCode = (codeWithLabel: string): { label: string, code: string } => {
+    const matches = codeWithLabel.match(/(.*?):\s*(.*)/);
+    if (matches && matches.length > 2) {
+      return { label: matches[1], code: matches[2] };
+    }
+    return { label: '', code: codeWithLabel };
+  };
+
+  // 获取翻译的版本标签
+  const getVersionLabel = (label: string): string => {
+    if (label.includes('< 3.9.6') && label.includes('高级版')) {
+      return t('finalshell.versions.advancedBelow396');
+    } else if (label.includes('< 3.9.6') && label.includes('专业版')) {
+      return t('finalshell.versions.proBelow396');
+    } else if (label.includes('>= 3.9.6') && label.includes('高级版')) {
+      return t('finalshell.versions.advancedAbove396');
+    } else if (label.includes('>= 3.9.6') && label.includes('专业版')) {
+      return t('finalshell.versions.proAbove396');
+    }
+    return label;
+  };
 
   return (
     <div>
       <PageHeader
-        title="FinalShell 注册机"
-        subTitle="生成FinalShell SSH工具的注册码"
+        title={t('finalshell.title')}
+        subTitle={t('finalshell.subTitle')}
         breadcrumbs={breadcrumbs}
       />
 
       <Paragraph>
-        FinalShell是一款优秀的SSH客户端工具，填写以下表单生成FinalShell的注册码，解锁所有专业功能。
+        {t('finalshell.description')}
       </Paragraph>
 
       <Alert
-        message="注意事项"
-        description="生成的注册码仅供学习和测试使用，请支持正版软件。"
+        message={t('finalshell.warning')}
+        description={t('finalshell.warningDescription')}
         type="warning"
         showIcon
         style={{ marginBottom: 24 }}
@@ -64,47 +165,65 @@ const FinalShell: React.FC = () => {
       <FormWrapper>
         <Form form={form} onFinish={handleGenerateLicense} layout="vertical">
           <Form.Item
-            name="username"
-            label="用户名"
-            rules={[{ required: true, message: '请输入用户名' }]}
-            initialValue="FinalShell_User"
+            name="machineCode"
+            label={t('finalshell.machineCode')}
+            rules={[{ required: true, message: t('finalshell.machineCodeRequired') }]}
           >
-            <Input placeholder="请输入用户名" />
+            <Input placeholder={t('finalshell.enterMachineCode')} />
           </Form.Item>
 
           <Form.Item>
             <Button type="primary" htmlType="submit" loading={loading}>
-              生成注册码
+              {t('finalshell.generateButton')}
             </Button>
           </Form.Item>
         </Form>
       </FormWrapper>
 
-      {license && (
-        <ResultCard
-          title="FinalShell注册码生成成功"
-          data={{
-            '用户名': license.username || '未指定',
-            '注册码': license.license,
-          }}
-          fileName="finalshell-license.txt"
-        />
+      {registrationCodes.length > 0 && (
+        <FormCard title={t('finalshell.registrationSuccess')}>
+          {registrationCodes.map((codeWithLabel, index) => {
+            const { label, code } = parseRegCode(codeWithLabel);
+            const versionLabel = getVersionLabel(label);
+            const copyKey = `code-${index}`;
+
+            return (
+              <div key={index} style={{marginBottom: 16}}>
+                <CodeLabel>{versionLabel}</CodeLabel>
+                <RegistrationCodeContainer>
+                  {code}
+                  <CopyButton
+                    size="small"
+                    type="primary"
+                    ghost
+                    icon={copying[copyKey] ? <CheckOutlined /> : <CopyOutlined />}
+                    onClick={() => copyToClipboard(copyKey, code)}
+                  />
+                </RegistrationCodeContainer>
+              </div>
+            );
+          })}
+        </FormCard>
       )}
 
-      <Alert
-        message="使用说明"
-        description={
-          <div>
-            <p>1. 打开FinalShell软件</p>
-            <p>2. 点击"帮助" &gt; "注册"</p>
-            <p>3. 输入上面生成的用户名和注册码</p>
-            <p>4. 点击"确定"完成注册</p>
-          </div>
-        }
-        type="info"
-        showIcon
-        style={{ marginTop: 24 }}
-      />
+      <FormCard title={t('finalshell.instructionsTitle')}>
+        <StepItem>
+          <StepNumber>1</StepNumber>
+          <StepContent>{t('finalshell.usageSteps.step1')}</StepContent>
+        </StepItem>
+        <StepItem>
+          <StepNumber>2</StepNumber>
+          <StepContent>{t('finalshell.usageSteps.step2')}</StepContent>
+        </StepItem>
+        <StepItem>
+          <StepNumber>3</StepNumber>
+          <StepContent>{t('finalshell.usageSteps.step3')}</StepContent>
+        </StepItem>
+        <StepItem>
+          <StepNumber>4</StepNumber>
+          <StepContent>{t('finalshell.usageSteps.step4')}</StepContent>
+        </StepItem>
+      </FormCard>
     </div>
   );
 };

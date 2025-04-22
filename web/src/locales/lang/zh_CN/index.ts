@@ -129,6 +129,31 @@ const zhCN = {
     step4: '在URL字段中输入上方服务器地址',
     step5: '在邮箱字段中输入任意有效的邮箱地址',
     step6: '点击"激活"完成激活'
+  },
+  finalshell: {
+    title: 'FinalShell 授权服务',
+    subTitle: '生成FinalShell SSH工具的注册码',
+    description: 'FinalShell是一款优秀的SSH客户端工具，填写以下表单生成FinalShell的注册码，解锁所有专业功能。',
+    warning: '注意事项',
+    warningDescription: '生成的注册码仅供学习和测试使用，请支持正版软件。',
+    machineCode: '机器码',
+    enterMachineCode: '请输入机器码',
+    machineCodeRequired: '请输入机器码',
+    generateButton: '生成注册码',
+    registrationSuccess: 'FinalShell注册码生成成功',
+    instructionsTitle: '使用说明',
+    usageSteps: {
+      step1: '打开FinalShell软件',
+      step2: '点击"帮助" > "注册"',
+      step3: '输入上面生成的用户名和注册码',
+      step4: '点击"确定"完成注册'
+    },
+    versions: {
+      advancedBelow396: '版本号 < 3.9.6 高级版',
+      proBelow396: '版本号 < 3.9.6 专业版',
+      advancedAbove396: '版本号 >= 3.9.6 高级版',
+      proAbove396: '版本号 >= 3.9.6 专业版'
+    }
   }
 };
 

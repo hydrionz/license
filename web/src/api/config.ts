@@ -45,9 +45,16 @@ const api = {
     }
   },
   
-  async post<T = any>(url: string, data?: any, params?: any): Promise<T> {
+  async post<T = any>(url: string, data?: any, config?: any): Promise<T> {
     try {
-      const response = await axiosInstance.post(url, data, { params });
+      const response = await axiosInstance.post(url, data, config);
+      
+      // 特殊处理 form-data 请求
+      if (config?.headers?.['Content-Type']?.includes('multipart/form-data')) {
+        // 直接返回接口响应内容
+        return response.data as T;
+      }
+      
       const apiResponse = response.data as ApiResponse<T>;
       
       if (apiResponse.status !== 0) {

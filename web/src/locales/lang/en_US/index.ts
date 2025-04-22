@@ -129,6 +129,31 @@ const enUS = {
     step4: 'Enter the server address above in the URL field',
     step5: 'Enter any valid email address in the email field',
     step6: 'Click "Activate" to complete the activation'
+  },
+  finalshell: {
+    title: 'FinalShell Authorization Service',
+    subTitle: 'Generate registration code for FinalShell SSH tool',
+    description: 'FinalShell is an excellent SSH client tool. Fill in the form below to generate a registration code for FinalShell to unlock all professional features.',
+    warning: 'Important Notice',
+    warningDescription: 'The generated registration code is for learning and testing purposes only. Please support the original software.',
+    machineCode: 'Machine Code',
+    enterMachineCode: 'Please enter machine code',
+    machineCodeRequired: 'Machine code is required',
+    generateButton: 'Generate Registration Code',
+    registrationSuccess: 'FinalShell Registration Code Generated Successfully',
+    instructionsTitle: 'Usage Instructions',
+    usageSteps: {
+      step1: 'Open FinalShell software',
+      step2: 'Click "Help" > "Registration"',
+      step3: 'Enter the username and registration code generated above',
+      step4: 'Click "OK" to complete the registration'
+    },
+    versions: {
+      advancedBelow396: 'Version < 3.9.6 Advanced Edition',
+      proBelow396: 'Version < 3.9.6 Professional Edition',
+      advancedAbove396: 'Version >= 3.9.6 Advanced Edition',
+      proAbove396: 'Version >= 3.9.6 Professional Edition'
+    }
   }
 };
 

@@ -84,6 +84,13 @@ const Home: React.FC = () => {
       color: '#f0f5ff',
     },
     {
+      title: t('home.tools.jrebel.title'),
+      description: t('home.tools.jrebel.description'),
+      icon: <AppstoreOutlined />,
+      path: '/jrebel',
+      color: '#f5f3ff',
+    },
+    {
       title: t('home.tools.gitlab.title'),
       description: t('home.tools.gitlab.description'),
       icon: <BranchesOutlined />,
@@ -103,13 +110,6 @@ const Home: React.FC = () => {
       icon: <CodeSandboxOutlined />,
       path: '/mobaxterm',
       color: '#eff6ff',
-    },
-    {
-      title: t('home.tools.jrebel.title'),
-      description: t('home.tools.jrebel.description'),
-      icon: <AppstoreOutlined />,
-      path: '/jrebel',
-      color: '#f5f3ff',
     },
   ];
 

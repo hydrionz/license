@@ -274,11 +274,6 @@ const JetBrains: React.FC = () => {
 
     // If generating authorization code by product
     if (activationMethod === 'code') {
-      if (!values.manualCodes) {
-        message.error(t('jetbrains.pleaseEnterProductCode'));
-        return;
-      }
-      
       handleGenerateLicense({
         licenseeName: values.licenseeName,
         effectiveDate: values.effectiveDate,
@@ -338,8 +333,6 @@ const JetBrains: React.FC = () => {
                 format="YYYY-MM-DD HH:mm:ss"
                 disabledDate={disablePastDates}
                 showNow={false}
-                defaultValue={dayjs().add(1, 'day')}
-                // Set locale to match i18n language
                 locale={i18n.language.startsWith('zh') ? 
                   require('antd/es/date-picker/locale/zh_CN').default : 
                   require('antd/es/date-picker/locale/en_US').default
@@ -350,7 +343,6 @@ const JetBrains: React.FC = () => {
             <Form.Item
               name="manualCodes"
               label={t('jetbrains.productCode')}
-              rules={[{ required: true, message: t('jetbrains.pleaseEnterProductCode') }]}
             >
               <Input.TextArea 
                 placeholder={t('jetbrains.pleaseEnterProductCode')} 

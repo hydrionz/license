@@ -106,6 +106,11 @@ const MainLayout: React.FC = () => {
       label: t('nav.jetbrains'),
     },
     {
+      key: '/jrebel',
+      icon: <AppstoreOutlined />,
+      label: t('nav.jrebel'),
+    },
+    {
       key: '/gitlab',
       icon: <BranchesOutlined />,
       label: t('nav.gitlab'),
@@ -119,11 +124,6 @@ const MainLayout: React.FC = () => {
       key: '/mobaxterm',
       icon: <CodeSandboxOutlined />,
       label: t('nav.mobaxterm'),
-    },
-    {
-      key: '/jrebel',
-      icon: <AppstoreOutlined />,
-      label: t('nav.jrebel'),
     },
   ];
 

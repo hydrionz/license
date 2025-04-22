@@ -22,13 +22,6 @@ export const generateLicense = async (
 };
 
 /**
- * 获取JRebel服务器规则
- */
-export const getLicenseServerRule = async (): Promise<string> => {
-  return api.get<string>('/jrebel/licenseServerRule');
-};
-
-/**
  * 生成随机GUID
  */
 export const generateGuid = (): string => {

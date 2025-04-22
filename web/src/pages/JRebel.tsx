@@ -8,7 +8,6 @@ import {
   ReloadOutlined 
 } from '@ant-design/icons';
 import PageHeader from '../components/PageHeader';
-import ResultCard from '../components/ResultCard';
 import { jrebel } from '../api';
 
 const { Title, Paragraph } = Typography;
@@ -86,11 +85,9 @@ const ReloadButton = styled(Button)`
 
 const JRebel: React.FC = () => {
   const { t } = useTranslation();
-  const [serverRule, setServerRule] = useState<string>('');
   const [serverAddress, setServerAddress] = useState<string>('');
   const [jrebelAddress, setJrebelAddress] = useState<string>('');
   const [guid, setGuid] = useState<string>('');
-  const [loadingServerRule, setLoadingServerRule] = useState(false);
   const [copying, setCopying] = useState<{[key: string]: boolean}>({});
   const [regenerating, setRegenerating] = useState(false);
   
@@ -112,26 +109,6 @@ const JRebel: React.FC = () => {
   useEffect(() => {
     generateAndSetAddresses();
   }, []);
-  
-  // 获取服务器规则
-  useEffect(() => {
-    if (!serverRule && !loadingServerRule) {
-      setLoadingServerRule(true);
-      
-      const fetchServerRule = async () => {
-        try {
-          const serverRuleText = await jrebel.getLicenseServerRule();
-          setServerRule(serverRuleText);
-        } catch (error) {
-          console.error(`获取服务器规则失败:`, error);
-        } finally {
-          setLoadingServerRule(false);
-        }
-      };
-  
-      fetchServerRule();
-    }
-  }, [serverRule, loadingServerRule]);
 
   // 复制到剪贴板
   const copyToClipboard = (key: string, text: string) => {
@@ -189,6 +166,9 @@ const JRebel: React.FC = () => {
       />
 
       <FormCard title={t('jrebel.serverConfig')}>
+        <Paragraph style={{ marginBottom: 8 }}>
+          {t('jrebel.baseServerAddress')}:
+        </Paragraph>
         <ServerAddressContainer>
           {jrebelAddress}
           <CopyButton
@@ -207,16 +187,6 @@ const JRebel: React.FC = () => {
             title={t('jrebel.regenerateGuid')}
           />
         </ServerAddressContainer>
-        
-        {serverRule && (
-          <ResultCard
-            title={t('jrebel.configurationDetails')}
-            data={{
-              [t('jrebel.baseServerAddress')]: serverAddress,
-              [t('jrebel.configurationRules')]: serverRule,
-            }}
-          />
-        )}
       </FormCard>
 
       <FormCard title={t('jrebel.activationSteps')}>

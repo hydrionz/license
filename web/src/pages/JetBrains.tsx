@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Typography, Form, Button, Alert, Card, Space, message, Input, Radio } from 'antd';
 import styled from 'styled-components';
 import { 
@@ -89,13 +89,30 @@ const JetBrains: React.FC = () => {
   const [copying, setCopying] = useState<{[key: string]: boolean}>({});
   const [codeForm] = Form.useForm();
   const [serverAddress, setServerAddress] = useState<string>('');
+  const previousMethodRef = useRef<'code' | 'server'>(activationMethod);
 
   // Get browser's host address when component mounts
   useEffect(() => {
     const host = window.location.host;
     setServerAddress(`http://${host}`);
   }, []);
-
+  
+  // Reset form and clear results when activation method changes
+  useEffect(() => {
+    // Only perform reset if the method actually changed (not on initial render)
+    if (previousMethodRef.current !== activationMethod) {
+      // Clear license results
+      setLicense(null);
+      setRawResponse(null);
+      
+      // Reset the form fields
+      codeForm.resetFields();
+      
+      // Update the previous method ref
+      previousMethodRef.current = activationMethod;
+    }
+  }, [activationMethod, codeForm]);
+  
   // 当用户切换到服务器激活模式时，获取服务器规则
   useEffect(() => {
     if (activationMethod === 'server' && !serverRule && !loadingServerRule) {
@@ -115,6 +132,12 @@ const JetBrains: React.FC = () => {
       fetchServerRule();
     }
   }, [activationMethod, serverRule, loadingServerRule]);
+
+  // Clear license results when switching activation methods
+  const handleActivationMethodChange = (e: any) => {
+    const newMethod = e.target.value;
+    setActivationMethod(newMethod);
+  };
 
   const handleGenerateLicense = async (values: { 
     licenseeName?: string, 
@@ -242,7 +265,7 @@ const JetBrains: React.FC = () => {
       <FormCard title={t('jetbrains.title')}>
         <Radio.Group 
           value={activationMethod} 
-          onChange={(e) => setActivationMethod(e.target.value)}
+          onChange={handleActivationMethodChange}
           style={{ marginBottom: 16 }}
         >
           <Radio.Button value="code">{t('jetbrains.codeActivation')}</Radio.Button>
@@ -250,7 +273,7 @@ const JetBrains: React.FC = () => {
         </Radio.Group>
 
         {activationMethod === 'code' ? (
-          <Form form={codeForm} onFinish={onFinish} layout="vertical">
+          <Form form={codeForm} onFinish={onFinish} layout="vertical" preserve={false}>
             <Form.Item
               name="licenseeName"
               label={t('jetbrains.licenseeName')}
@@ -345,8 +368,8 @@ const JetBrains: React.FC = () => {
         )}
       </FormCard>
 
-      {/* Custom license result display */}
-      {license && rawResponse && (
+      {/* Only show license results if they exist AND we're in the activation method that created them */}
+      {license && rawResponse && activationMethod === 'code' && (
         <LicenseResultCard title={<Title level={5} style={{ margin: 0 }}>{t('jetbrains.activationSuccess')}</Title>}>
           <Space direction="vertical" style={{ width: '100%' }}>
             <div>

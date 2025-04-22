@@ -73,7 +73,10 @@ const enUS = {
     powerConfConfig: 'power.conf Configuration',
     activationCode: 'Authorization Code',
     copySuccess: 'Copied successfully',
-    copyFail: 'Copy failed, please copy manually'
+    copyFail: 'Copy failed, please copy manually',
+    serverRuleFetchError: 'Failed to fetch server rules',
+    licenseGenerationError: 'Failed to generate authorization code',
+    powerConfLabel: 'power.conf Configuration'
   }
 };
 

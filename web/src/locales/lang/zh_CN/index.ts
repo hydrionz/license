@@ -73,7 +73,10 @@ const zhCN = {
     powerConfConfig: 'power.conf配置',
     activationCode: '授权码',
     copySuccess: '复制成功',
-    copyFail: '复制失败，请手动复制'
+    copyFail: '复制失败，请手动复制',
+    serverRuleFetchError: '获取服务器规则失败',
+    licenseGenerationError: '生成授权码失败',
+    powerConfLabel: 'power.conf配置'
   }
 };
 

@@ -78,6 +78,29 @@ const LabelText = styled(Text)`
   color: #4b5563;
 `;
 
+// Add a new styled component for the copy button to match the ResultCard style
+const StyledCopyButton = styled(Button)`
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  opacity: 0.8;
+  
+  &:hover {
+    opacity: 1;
+  }
+`;
+
+// Add a styled component for the server address container
+const ServerAddressContainer = styled.div`
+  position: relative;
+  background-color: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 16px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+`;
+
 const JetBrains: React.FC = () => {
   const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
@@ -113,7 +136,7 @@ const JetBrains: React.FC = () => {
     }
   }, [activationMethod, codeForm]);
   
-  // 当用户切换到服务器激活模式时，获取服务器规则
+  // Fetch server rules when user switches to server authorization mode
   useEffect(() => {
     if (activationMethod === 'server' && !serverRule && !loadingServerRule) {
       setLoadingServerRule(true);
@@ -123,7 +146,7 @@ const JetBrains: React.FC = () => {
           const serverRuleText = await jetbrains.getLicenseServerRule();
           setServerRule(serverRuleText);
         } catch (error) {
-          console.error('获取服务器规则失败:', error);
+          console.error(`${t('jetbrains.serverRuleFetchError')}:`, error);
         } finally {
           setLoadingServerRule(false);
         }
@@ -131,7 +154,7 @@ const JetBrains: React.FC = () => {
   
       fetchServerRule();
     }
-  }, [activationMethod, serverRule, loadingServerRule]);
+  }, [activationMethod, serverRule, loadingServerRule, t]);
 
   // Clear license results when switching activation methods
   const handleActivationMethodChange = (e: any) => {
@@ -158,10 +181,10 @@ const JetBrains: React.FC = () => {
       // Also keep the license object for compatibility
       setLicense({
         code: '',
-        product: values.codes?.split(',')[0] || 'Unknown'
+        product: values.codes?.split(',')[0] || t('jetbrains.unknownProduct')
       });
     } catch (error) {
-      console.error('生成许可证失败:', error);
+      console.error(`${t('jetbrains.licenseGenerationError')}:`, error);
     } finally {
       setLoading(false);
     }
@@ -233,7 +256,7 @@ const JetBrains: React.FC = () => {
       return;
     }
 
-    // 如果是按照产品生成激活码
+    // If generating authorization code by product
     if (activationMethod === 'code') {
       if (!values.manualCodes) {
         message.error(t('jetbrains.pleaseEnterProductCode'));
@@ -246,7 +269,7 @@ const JetBrains: React.FC = () => {
         codes: values.manualCodes
       });
     } else if (activationMethod === 'server') {
-      // 服务器激活方式，不需要传递产品代码
+      // Server authorization method, no need to pass product codes
       handleGenerateLicense({
         licenseeName: values.licenseeName,
         effectiveDate: values.effectiveDate
@@ -316,45 +339,13 @@ const JetBrains: React.FC = () => {
               {t('jetbrains.serverActivationDescription')}
             </Paragraph>
 
-            <Form layout="vertical" style={{ marginBottom: 16 }}>
-              <Form.Item 
-                label={t('jetbrains.serverAddress')} 
-                tooltip={t('jetbrains.serverAddressTooltip')}
-              >
-                <div style={{ position: 'relative' }}>
-                  <Input 
-                    value={serverAddress}
-                    readOnly
-                    style={{ 
-                      backgroundColor: '#f5f5f5', 
-                      cursor: 'default',
-                      paddingRight: '40px' 
-                    }}
-                  />
-                  <Button 
-                    type="text" 
-                    icon={copying['serverAddress'] ? <CheckOutlined /> : <CopyOutlined />} 
-                    onClick={() => copyToClipboard('serverAddress', serverAddress)}
-                    style={{ 
-                      position: 'absolute', 
-                      right: '8px', 
-                      top: '50%', 
-                      transform: 'translateY(-50%)',
-                      border: 'none',
-                      backgroundColor: 'transparent'
-                    }}
-                  />
-                </div>
-              </Form.Item>
-            </Form>
-
             {serverRule ? (
               <ResultCard
                 title={t('jetbrains.serverConfig')}
                 data={{
-                  'power.conf配置': serverRule,
+                  [t('jetbrains.serverAddress')]: serverAddress,
+                  [t('jetbrains.powerConfLabel')]: serverRule,
                 }}
-                fileName="jetbrains-server-config.txt"
               />
             ) : (
               <Alert
@@ -381,7 +372,7 @@ const JetBrains: React.FC = () => {
             
             {extractPowerConf() && (
               <div style={{ marginTop: 16 }}>
-                <LabelText>{t('jetbrains.powerConfConfig')}:</LabelText>
+                <LabelText>{t('jetbrains.powerConfLabel')}:</LabelText>
                 <LicenseContent>
                   {extractPowerConf()}
                   <CopyButton

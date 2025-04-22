@@ -145,6 +145,21 @@ jobs:
           echo "Checking web build output:"
           ls -la web/build/
           echo "Web frontend built successfully. It will be embedded in the Go binary using //go:embed"
+      
+      # 将前端构建产物打包并上传
+      - name: Compress and upload web build artifacts
+        run: |
+          echo "Compressing web build directory..."
+          tar -czvf web-build.tar.gz -C web build/
+          echo "Compressed size:"
+          ls -lh web-build.tar.gz
+      
+      - name: Upload web build archive
+        uses: actions/upload-artifact@v4
+        with:
+          name: web-build-archive
+          path: web-build.tar.gz
+          retention-days: 1
 
       - name: Get dependencies
         run: go mod download
@@ -173,26 +188,32 @@ jobs:
       - name: Get dependencies
         run: go mod download
         
-      # 注意：前端已在测试阶段构建完成，这里直接使用
-      # 验证web/build目录是否存在
-      - name: Verify web build exists
+      # 下载并解压前端构建产物
+      - name: Download and extract web build archive
         run: |
-          if [ -d "web/build" ]; then
-            echo "Web build directory exists, checking contents:"
-            ls -la web/build/
-          else
-            echo "Web build directory does not exist, creating it from test stage..."
-            # 设置Node.js环境并构建前端
-            # 设置Node.js环境用于构建前端
-            echo "Setting up Node.js environment..."
-            cd web
-            npm ci
-            # 设置CI=false以避免将ESLint警告视为错误
-            CI=false npm run build
-            cd ..
-            echo "Checking web build output:"
-            ls -la web/build/
-          fi
+          # 创建临时目录下载压缩包
+          mkdir -p tmp
+          
+      - name: Download web build archive
+        uses: actions/download-artifact@v4
+        with:
+          name: web-build-archive
+          path: tmp/
+      
+      - name: Extract web build
+        run: |
+          # 检查下载的压缩包
+          echo "Downloaded archive:"
+          ls -la tmp/
+          
+          # 提取压缩包到项目根目录，保留web/build结构
+          echo "Extracting web build archive..."
+          tar -xzvf tmp/web-build.tar.gz
+          
+          # 验证解压结果
+          echo "Checking extracted web build:"
+          ls -la web/build/
+          echo "Web build successfully extracted and ready for embedding"
       
       # 编译不同平台的二进制文件
       - name: Build binaries
@@ -262,7 +283,7 @@ jobs:
         run: |
           echo "Downloaded binaries:"
           ls -la build/
-          # 二进制文件已经包含前端资源（通过Go embed功能）
+          echo "These binaries already contain embedded web frontend resources"
 
       # 准备Docker构建上下文
       - name: Prepare build context

@@ -77,6 +77,27 @@ const enUS = {
     serverRuleFetchError: 'Failed to fetch server rules',
     licenseGenerationError: 'Failed to generate authorization code',
     powerConfLabel: 'power.conf Configuration'
+  },
+  jrebel: {
+    title: 'JRebel Authorization Service',
+    subTitle: 'Provide authorization service for JRebel hot deployment tool',
+    description: 'JRebel is a powerful Java hot deployment tool that allows you to see code changes in real-time without restarting the application server.',
+    activationTitle: 'Activation Instructions',
+    activationDescription: 'This service provides JRebel activation. Use the dedicated server address to activate JRebel.',
+    serverConfig: 'Server Authorization Configuration',
+    configurationDetails: 'Configuration Details',
+    baseServerAddress: 'Base Server Address',
+    guid: 'Unique Identifier (GUID)',
+    regenerateGuid: 'Regenerate GUID',
+    regenerateGuidButton: 'Regenerate',
+    configurationRules: 'Configuration Rules',
+    activationSteps: 'JRebel Activation Steps',
+    step1: 'Open your IDE (e.g., IntelliJ IDEA)',
+    step2: 'Find the JRebel plugin settings',
+    step3: 'Choose "Team URL" activation method',
+    step4: 'Enter the server address above in the URL field',
+    step5: 'Enter any valid email address in the email field',
+    step6: 'Click "Activate" to complete the activation'
   }
 };
 

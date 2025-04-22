@@ -1,193 +1,250 @@
-import React, { useState } from 'react';
-import { Typography, Form, Button, Input, Alert, Divider } from 'antd';
+import React, { useState, useEffect, useRef } from 'react';
+import { Typography, Alert, Card, Button, Tooltip } from 'antd';
 import styled from 'styled-components';
+import { useTranslation } from 'react-i18next';
+import { 
+  CopyOutlined, 
+  CheckOutlined, 
+  ReloadOutlined 
+} from '@ant-design/icons';
 import PageHeader from '../components/PageHeader';
 import ResultCard from '../components/ResultCard';
 import { jrebel } from '../api';
-import { JRebelLicense } from '../types';
 
 const { Title, Paragraph } = Typography;
 
-const FormWrapper = styled.div`
-  max-width: 600px;
+const FormCard = styled(Card)`
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
   margin-bottom: 32px;
+  border: 1px solid #e5e7eb;
+  
+  .ant-card-head {
+    border-bottom: 1px solid #e5e7eb;
+  }
 `;
 
 const StepItem = styled.div`
   margin-bottom: 16px;
+  display: flex;
+  align-items: flex-start;
 `;
 
 const StepNumber = styled.span`
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 24px;
+  min-width: 24px;
   height: 24px;
   background-color: #1890ff;
   color: #fff;
   border-radius: 50%;
-  margin-right: 8px;
+  margin-right: 12px;
   font-size: 14px;
+  flex-shrink: 0;
+`;
+
+const StepContent = styled.div`
+  flex: 1;
+`;
+
+const ServerAddressContainer = styled.div`
+  position: relative;
+  background-color: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 16px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  overflow-wrap: break-word;
+  word-break: break-all;
+`;
+
+const CopyButton = styled(Button)`
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  opacity: 0.8;
+  z-index: 2;
+  
+  &:hover {
+    opacity: 1;
+  }
+`;
+
+const ReloadButton = styled(Button)`
+  position: absolute;
+  top: 8px;
+  right: 42px;
+  opacity: 0.8;
+  z-index: 2;
+  
+  &:hover {
+    opacity: 1;
+  }
 `;
 
 const JRebel: React.FC = () => {
-  const [loading, setLoading] = useState(false);
-  const [license, setLicense] = useState<JRebelLicense | null>(null);
-  const [form] = Form.useForm();
-
-  const handleGenerateLicense = async (values: {
-    username: string;
-    email: string;
-    teamName: string;
-  }) => {
-    setLoading(true);
-    try {
-      const data = await jrebel.generateLicense(
-        values.username,
-        values.email,
-        values.teamName
-      );
-      setLicense(data);
-    } catch (error) {
-      console.error('生成许可证失败:', error);
-    } finally {
-      setLoading(false);
+  const { t } = useTranslation();
+  const [serverRule, setServerRule] = useState<string>('');
+  const [serverAddress, setServerAddress] = useState<string>('');
+  const [jrebelAddress, setJrebelAddress] = useState<string>('');
+  const [guid, setGuid] = useState<string>('');
+  const [loadingServerRule, setLoadingServerRule] = useState(false);
+  const [copying, setCopying] = useState<{[key: string]: boolean}>({});
+  const [regenerating, setRegenerating] = useState(false);
+  
+  // 生成GUID和设置地址
+  const generateAndSetAddresses = () => {
+    const host = window.location.host;
+    const baseAddress = `http://${host}`;
+    setServerAddress(baseAddress);
+    
+    // 生成一个随机的GUID
+    const newGuid = jrebel.generateGuid();
+    setGuid(newGuid);
+    
+    // 设置JRebel完整地址
+    setJrebelAddress(`${baseAddress}/${newGuid}`);
+  };
+  
+  // 获取浏览器主机地址和生成GUID
+  useEffect(() => {
+    generateAndSetAddresses();
+  }, []);
+  
+  // 获取服务器规则
+  useEffect(() => {
+    if (!serverRule && !loadingServerRule) {
+      setLoadingServerRule(true);
+      
+      const fetchServerRule = async () => {
+        try {
+          const serverRuleText = await jrebel.getLicenseServerRule();
+          setServerRule(serverRuleText);
+        } catch (error) {
+          console.error(`获取服务器规则失败:`, error);
+        } finally {
+          setLoadingServerRule(false);
+        }
+      };
+  
+      fetchServerRule();
     }
+  }, [serverRule, loadingServerRule]);
+
+  // 复制到剪贴板
+  const copyToClipboard = (key: string, text: string) => {
+    navigator.clipboard.writeText(text).then(() => {
+      setCopying({ ...copying, [key]: true });
+      
+      setTimeout(() => {
+        setCopying({ ...copying, [key]: false });
+      }, 2000);
+    });
+  };
+  
+  // 重新生成GUID
+  const handleRegenerateGuid = () => {
+    setRegenerating(true);
+    
+    // 生成新的GUID并更新地址
+    generateAndSetAddresses();
+    
+    // 显示重新生成动画
+    setTimeout(() => {
+      setRegenerating(false);
+    }, 500);
   };
 
   const breadcrumbs = [
     {
       path: '/',
-      breadcrumbName: '首页',
+      breadcrumbName: t('nav.home'),
     },
     {
       path: '',
-      breadcrumbName: 'JRebel 激活服务',
+      breadcrumbName: t('nav.jrebel'),
     },
   ];
-
-  const serverUrl = 'http://jrebel.license.server/';
 
   return (
     <div>
       <PageHeader
-        title="JRebel 激活服务"
-        subTitle="为JRebel热部署工具提供激活服务"
+        title={t('jrebel.title')}
+        subTitle={t('jrebel.subTitle')}
         breadcrumbs={breadcrumbs}
       />
 
       <Paragraph>
-        JRebel是一款强大的Java热部署工具，可以让你在不重启应用服务器的情况下，实时看到代码改动的效果。
+        {t('jrebel.description')}
       </Paragraph>
 
       <Alert
-        message="激活说明"
-        description="本服务提供JRebel的激活。请填写以下表单来获取激活信息，或使用本服务器地址进行离线激活。"
+        message={t('jrebel.activationTitle')}
+        description={t('jrebel.activationDescription')}
         type="info"
         showIcon
         style={{ marginBottom: 24 }}
       />
 
-      <Title level={3}>方法一：离线激活</Title>
-      <Paragraph>
-        您可以直接使用以下服务器地址在JRebel中进行离线激活：
-      </Paragraph>
+      <FormCard title={t('jrebel.serverConfig')}>
+        <ServerAddressContainer>
+          {jrebelAddress}
+          <CopyButton
+            size="small"
+            type="primary"
+            ghost
+            icon={copying['jrebelAddress'] ? <CheckOutlined /> : <CopyOutlined />}
+            onClick={() => copyToClipboard('jrebelAddress', jrebelAddress)}
+          />
+          <ReloadButton
+            size="small"
+            type="primary"
+            ghost
+            icon={<ReloadOutlined spin={regenerating} />}
+            onClick={handleRegenerateGuid}
+            title={t('jrebel.regenerateGuid')}
+          />
+        </ServerAddressContainer>
+        
+        {serverRule && (
+          <ResultCard
+            title={t('jrebel.configurationDetails')}
+            data={{
+              [t('jrebel.baseServerAddress')]: serverAddress,
+              [t('jrebel.configurationRules')]: serverRule,
+            }}
+          />
+        )}
+      </FormCard>
 
-      <ResultCard
-        title="JRebel激活服务器"
-        data={{
-          '服务器地址': serverUrl,
-        }}
-      />
-
-      <Divider />
-
-      <Title level={3}>方法二：生成授权信息</Title>
-      <Paragraph>
-        填写以下表单生成JRebel的授权信息：
-      </Paragraph>
-
-      <FormWrapper>
-        <Form form={form} onFinish={handleGenerateLicense} layout="vertical">
-          <Form.Item
-            name="username"
-            label="用户名"
-            rules={[{ required: true, message: '请输入用户名' }]}
-          >
-            <Input placeholder="请输入用户名" />
-          </Form.Item>
-
-          <Form.Item
-            name="email"
-            label="邮箱地址"
-            rules={[
-              { required: true, message: '请输入邮箱地址' },
-              { type: 'email', message: '请输入有效的邮箱地址' },
-            ]}
-          >
-            <Input placeholder="请输入邮箱地址" />
-          </Form.Item>
-
-          <Form.Item
-            name="teamName"
-            label="团队名称"
-            rules={[{ required: true, message: '请输入团队名称' }]}
-            initialValue="JRebel Team"
-          >
-            <Input placeholder="请输入团队名称" />
-          </Form.Item>
-
-          <Form.Item>
-            <Button type="primary" htmlType="submit" loading={loading}>
-              生成授权信息
-            </Button>
-          </Form.Item>
-        </Form>
-      </FormWrapper>
-
-      {license && (
-        <ResultCard
-          title="JRebel授权信息生成成功"
-          data={{
-            '用户名': license.username || '未指定',
-            '邮箱': license.email || '未指定',
-            '团队名称': license.teamName || '未指定',
-            '授权密钥': license.validKey || '',
-          }}
-          fileName="jrebel-license.txt"
-        />
-      )}
-
-      <Divider />
-
-      <Title level={3}>JRebel激活步骤</Title>
-
-      <div>
+      <FormCard title={t('jrebel.activationSteps')}>
         <StepItem>
           <StepNumber>1</StepNumber>
-          <span>打开IDE (如IntelliJ IDEA)</span>
+          <StepContent>{t('jrebel.step1')}</StepContent>
         </StepItem>
         <StepItem>
           <StepNumber>2</StepNumber>
-          <span>找到JRebel插件的设置界面</span>
+          <StepContent>{t('jrebel.step2')}</StepContent>
         </StepItem>
         <StepItem>
           <StepNumber>3</StepNumber>
-          <span>选择"Team URL"激活方式</span>
+          <StepContent>{t('jrebel.step3')}</StepContent>
         </StepItem>
         <StepItem>
           <StepNumber>4</StepNumber>
-          <span>在URL中填入上方的服务器地址</span>
+          <StepContent>{t('jrebel.step4')}</StepContent>
         </StepItem>
         <StepItem>
           <StepNumber>5</StepNumber>
-          <span>如果生成了授权信息，可填入相关的用户名和授权密钥</span>
+          <StepContent>{t('jrebel.step5')}</StepContent>
         </StepItem>
         <StepItem>
           <StepNumber>6</StepNumber>
-          <span>点击"Activate"完成激活</span>
+          <StepContent>{t('jrebel.step6')}</StepContent>
         </StepItem>
-      </div>
+      </FormCard>
     </div>
   );
 };

@@ -1,5 +1,6 @@
 import api from './config';
 import { JRebelLicense } from '../types';
+import { v4 as uuidv4 } from 'uuid';
 
 /**
  * 生成JRebel许可证
@@ -18,4 +19,18 @@ export const generateLicense = async (
     email,
     teamName
   });
+};
+
+/**
+ * 获取JRebel服务器规则
+ */
+export const getLicenseServerRule = async (): Promise<string> => {
+  return api.get<string>('/jrebel/licenseServerRule');
+};
+
+/**
+ * 生成随机GUID
+ */
+export const generateGuid = (): string => {
+  return uuidv4();
 }; 

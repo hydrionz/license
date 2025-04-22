@@ -97,6 +97,7 @@ const LicenseContent = styled.div`
   margin-top: 12px;
   background-color: #f9fafb;
   padding: 16px;
+  padding-right: 48px;
   border-radius: 8px;
   border: 1px solid #e5e7eb;
   white-space: pre-wrap;
@@ -112,6 +113,7 @@ const CopyButton = styled(Button)`
   top: 8px;
   right: 8px;
   opacity: 0.8;
+  z-index: 2;
   
   &:hover {
     opacity: 1;

@@ -57,18 +57,14 @@ const StyledMenu = styled(Menu)`
   border-bottom: none;
 `;
 
-const MobileMenuButton = styled(Button)`
-  display: none;
-  @media (max-width: 768px) {
-    display: block;
-    margin-right: 16px;
-  }
+const MobileMenuButton = styled(Button)<{ $isMobile: boolean }>`
+  display: ${props => props.$isMobile ? 'block' : 'none'};
+  margin-right: 16px;
 `;
 
-const DesktopMenu = styled.div`
-  @media (max-width: 768px) {
-    display: none;
-  }
+const DesktopMenu = styled.div<{ $isMobile: boolean }>`
+  display: ${props => props.$isMobile ? 'none' : 'block'};
+  flex: 1;
 `;
 
 const MainContent = styled(Content)`
@@ -97,6 +93,8 @@ const MainLayout: React.FC = () => {
   const { t } = useTranslation();
 
   useEffect(() => {
+    setIsMobile(responsive.isMobile());
+    
     const handleResize = () => {
       setIsMobile(responsive.isMobile());
     };
@@ -149,6 +147,7 @@ const MainLayout: React.FC = () => {
     <StyledLayout>
       <StyledHeader>
         <MobileMenuButton
+          $isMobile={isMobile}
           type="text"
           icon={<MenuUnfoldOutlined />}
           onClick={() => setMobileOpen(true)}
@@ -157,7 +156,7 @@ const MainLayout: React.FC = () => {
           <LogoImage src="/logo.svg" alt="License" />
           <LogoText>License</LogoText>
         </LogoWrapper>
-        <DesktopMenu>
+        <DesktopMenu $isMobile={isMobile}>
           <StyledMenu 
             mode="horizontal" 
             selectedKeys={[location.pathname]}

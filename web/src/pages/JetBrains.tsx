@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Typography, Form, Button, Alert, Card, Space, message, Input, Radio, DatePicker, ConfigProvider } from 'antd';
+import { Typography, Form, Button, Alert, Card, Space, message, Input, DatePicker, ConfigProvider } from 'antd';
 import styled from 'styled-components';
 import dayjs from 'dayjs';
 import type { Dayjs } from 'dayjs';
@@ -82,7 +82,6 @@ const LabelText = styled(Text)`
   color: #4b5563;
 `;
 
-// Add a new styled component for the copy button to match the ResultCard style
 const StyledCopyButton = styled(Button)`
   position: absolute;
   top: 8px;
@@ -94,7 +93,6 @@ const StyledCopyButton = styled(Button)`
   }
 `;
 
-// Add a styled component for the server address container
 const ServerAddressContainer = styled.div`
   position: relative;
   background-color: #f9fafb;
@@ -103,6 +101,44 @@ const ServerAddressContainer = styled.div`
   padding: 16px;
   margin-bottom: 16px;
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+`;
+
+// 创建自定义的切换按钮容器
+const TabsContainer = styled.div`
+  display: flex;
+  margin-bottom: 24px;
+  border-bottom: 1px solid #f0f0f0;
+`;
+
+// 创建自定义的切换按钮
+const TabButton = styled.button<{ active: boolean }>`
+  padding: 8px 16px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: ${props => props.active ? '500' : 'normal'};
+  color: ${props => props.active ? '#1890ff' : 'rgba(0, 0, 0, 0.65)'};
+  position: relative;
+  transition: all 0.3s;
+  
+  &:focus {
+    outline: none;
+  }
+  
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: -1px;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: ${props => props.active ? '#1890ff' : 'transparent'};
+  }
+  
+  &:hover {
+    color: #1890ff;
+  }
 `;
 
 const JetBrains: React.FC = () => {
@@ -167,10 +203,8 @@ const JetBrains: React.FC = () => {
     }
   }, [activationMethod, serverRule, loadingServerRule, t]);
 
-  // Clear license results when switching activation methods
-  const handleActivationMethodChange = (e: any) => {
-    const newMethod = e.target.value;
-    setActivationMethod(newMethod);
+  const handleTabChange = (method: 'code' | 'server') => {
+    setActivationMethod(method);
   };
 
   const handleGenerateLicense = async (values: { 
@@ -303,14 +337,20 @@ const JetBrains: React.FC = () => {
       />
 
       <FormCard title={t('jetbrains.title')}>
-        <Radio.Group 
-          value={activationMethod} 
-          onChange={handleActivationMethodChange}
-          style={{ marginBottom: 16 }}
-        >
-          <Radio.Button value="code">{t('jetbrains.codeActivation')}</Radio.Button>
-          <Radio.Button value="server">{t('jetbrains.serverActivation')}</Radio.Button>
-        </Radio.Group>
+        <TabsContainer>
+          <TabButton 
+            active={activationMethod === 'code'} 
+            onClick={() => handleTabChange('code')}
+          >
+            {t('jetbrains.codeActivation')}
+          </TabButton>
+          <TabButton 
+            active={activationMethod === 'server'} 
+            onClick={() => handleTabChange('server')}
+          >
+            {t('jetbrains.serverActivation')}
+          </TabButton>
+        </TabsContainer>
 
         {activationMethod === 'code' ? (
           <Form form={codeForm} onFinish={onFinish} layout="vertical" preserve={false}>

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Typography, Form, Button, Alert, Card, Space, message, Input, DatePicker, ConfigProvider } from 'antd';
+import {Typography, Form, Button, Alert, Card, Space, Input, DatePicker, App} from 'antd';
 import styled from 'styled-components';
 import dayjs from 'dayjs';
 import type { Dayjs } from 'dayjs';
@@ -82,27 +82,6 @@ const LabelText = styled(Text)`
   color: #4b5563;
 `;
 
-const StyledCopyButton = styled(Button)`
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  opacity: 0.8;
-  
-  &:hover {
-    opacity: 1;
-  }
-`;
-
-const ServerAddressContainer = styled.div`
-  position: relative;
-  background-color: #f9fafb;
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
-  padding: 16px;
-  margin-bottom: 16px;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-`;
-
 // 创建自定义的切换按钮容器
 const TabsContainer = styled.div`
   display: flex;
@@ -143,6 +122,7 @@ const TabButton = styled.button<{ active: boolean }>`
 
 const JetBrains: React.FC = () => {
   const { t, i18n } = useTranslation();
+  const { notification } = App.useApp();
   const [loading, setLoading] = useState(false);
   const [license, setLicense] = useState<JetBrainsLicense | null>(null);
   const [rawResponse, setRawResponse] = useState<string | null>(null);
@@ -244,13 +224,21 @@ const JetBrains: React.FC = () => {
   const copyToClipboard = (key: string, text: string) => {
     navigator.clipboard.writeText(text).then(() => {
       setCopying({ ...copying, [key]: true });
-      message.success(t('jetbrains.copySuccess'));
-      
+
+      notification.success({
+        message: t('common.copied'),
+        duration: 3,
+      });
+
       setTimeout(() => {
         setCopying({ ...copying, [key]: false });
       }, 2000);
-    }).catch(() => {
-      message.error(t('jetbrains.copyFail'));
+    }).catch((error) => {
+      notification.error({
+        message: t('common.copyFail'),
+        duration: 3,
+      });
+      console.error('Copy failed:', error);
     });
   };
 
@@ -303,7 +291,10 @@ const JetBrains: React.FC = () => {
 
   const onFinish = (values: any) => {
     if (!values.licenseeName) {
-      message.error(t('jetbrains.pleaseEnterLicenseeName'));
+      notification.error({
+        message: t('jetbrains.pleaseEnterLicenseeName'),
+        duration: 3,
+      });
       return;
     }
 

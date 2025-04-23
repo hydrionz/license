@@ -1,4 +1,3 @@
-import api from './config';
 import axios from 'axios';
 
 /**

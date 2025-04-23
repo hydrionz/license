@@ -16,6 +16,7 @@ const enUS = {
     reset: 'Reset',
     copy: 'Copy',
     copied: 'Copied',
+    copyFail: 'Copy failed, please copy manually',
     generate: 'Generate',
     success: 'Success',
     error: 'Error',

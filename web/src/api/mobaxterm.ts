@@ -1,5 +1,4 @@
 import api from './config';
-import { MobaXtermLicense } from '../types';
 
 /**
  * Generate MobaXterm license

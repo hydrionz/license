@@ -16,7 +16,7 @@ const mapToHtmlLang = (language: string): string => {
 };
 
 const LanguageSelector: React.FC = () => {
-  const { i18n, t } = useTranslation();
+  const { i18n } = useTranslation();
   const [currentLanguage, setCurrentLanguage] = useState<string>('en'); // Default to English
   
   // Initialize language from localStorage on component mount
@@ -46,11 +46,11 @@ const LanguageSelector: React.FC = () => {
       const browserLang = navigator.language || (navigator as any).userLanguage;
       let detectedLang = 'en';
       
-      if (browserLang && browserLang.startsWith('zh-CN') || browserLang === 'zh-Hans') detectedLang = 'zh-CN';
-      if (browserLang && browserLang.startsWith('zh-TW') || browserLang === 'zh-Hant') detectedLang = 'zh-TW';
-      if (browserLang && (browserLang.startsWith('ja'))) detectedLang = 'ja';
-      if (browserLang && (browserLang.startsWith('ko'))) detectedLang = 'ko';
-      if (browserLang && (browserLang.startsWith('ru'))) detectedLang = 'ru';
+      if ((browserLang && browserLang.startsWith('zh-CN')) || browserLang === 'zh-Hans') detectedLang = 'zh-CN';
+      if ((browserLang && browserLang.startsWith('zh-TW')) || browserLang === 'zh-Hant') detectedLang = 'zh-TW';
+      if (browserLang && browserLang.startsWith('ja')) detectedLang = 'ja';
+      if (browserLang && browserLang.startsWith('ko')) detectedLang = 'ko';
+      if (browserLang && browserLang.startsWith('ru')) detectedLang = 'ru';
       
       setCurrentLanguage(detectedLang);
       i18n.changeLanguage(detectedLang);

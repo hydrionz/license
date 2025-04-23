@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Typography, Form, Button, Input, Alert, Card, Row, Col, Divider } from 'antd';
+import {Typography, Form, Button, Input, Alert, Card, App} from 'antd';
 import styled from 'styled-components';
 import { useTranslation } from 'react-i18next';
 import { CopyOutlined, CheckOutlined } from '@ant-design/icons';
@@ -80,6 +80,7 @@ const CodeLabel = styled.div`
 
 const FinalShell: React.FC = () => {
   const { t } = useTranslation();
+  const { notification } = App.useApp();
   const [loading, setLoading] = useState(false);
   const [authorizationCodes, setAuthorizationCodes] = useState<string[]>([]);
   const [copying, setCopying] = useState<{[key: string]: boolean}>({});
@@ -109,10 +110,21 @@ const FinalShell: React.FC = () => {
   const copyToClipboard = (key: string, text: string) => {
     navigator.clipboard.writeText(text).then(() => {
       setCopying({ ...copying, [key]: true });
+
+      notification.success({
+        message: t('common.copied'),
+        duration: 3,
+      });
       
       setTimeout(() => {
         setCopying({ ...copying, [key]: false });
       }, 2000);
+    }).catch((error) => {
+      notification.error({
+        message: t('common.copyFail'),
+        duration: 3,
+      });
+      console.error('Copy failed:', error);
     });
   };
 

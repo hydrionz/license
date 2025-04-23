@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import styled from 'styled-components';
-import { Card, Button, Typography, Divider, message, Space, Tooltip } from 'antd';
+import {Card, Button, Typography, Divider, message, Space, Tooltip, App} from 'antd';
 import { CopyOutlined, CheckOutlined, DownloadOutlined } from '@ant-design/icons';
+import {useTranslation} from "react-i18next";
 
 const { Title, Text } = Typography;
 
@@ -75,18 +76,28 @@ const DownloadButton = styled(Button)`
 `;
 
 const ResultCard: React.FC<ResultCardProps> = ({ title, data, fileName }) => {
+  const { t } = useTranslation();
+  const { notification } = App.useApp();
   const [copying, setCopying] = useState<Record<string, boolean>>({});
 
   const copyToClipboard = (key: string, text: string) => {
     navigator.clipboard.writeText(text).then(() => {
       setCopying({ ...copying, [key]: true });
-      message.success('复制成功');
-      
+
+      notification.success({
+        message: t('common.copied'),
+        duration: 3,
+      });
+
       setTimeout(() => {
         setCopying({ ...copying, [key]: false });
       }, 2000);
-    }).catch(() => {
-      message.error('复制失败，请手动复制');
+    }).catch((error) => {
+      notification.error({
+        message: t('common.copyFail'),
+        duration: 3,
+      });
+      console.error('Copy failed:', error);
     });
   };
 

@@ -16,6 +16,7 @@ const jaJP = {
     reset: 'リセット',
     copy: 'コピー',
     copied: 'コピーしました',
+    copyFail: 'コピーに失敗しました。手動でコピーしてください',
     generate: '生成',
     success: '成功',
     error: 'エラー',

@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Typography, Alert, Card, Button, Tooltip } from 'antd';
+import React, { useState, useEffect } from 'react';
+import {Typography, Alert, Card, Button, App} from 'antd';
 import styled from 'styled-components';
 import { useTranslation } from 'react-i18next';
 import { 
@@ -10,7 +10,7 @@ import {
 import PageHeader from '../components/PageHeader';
 import { jrebel } from '../api';
 
-const { Title, Paragraph } = Typography;
+const {Paragraph } = Typography;
 
 const FormCard = styled(Card)`
   border-radius: 12px;
@@ -85,9 +85,10 @@ const ReloadButton = styled(Button)`
 
 const JRebel: React.FC = () => {
   const { t } = useTranslation();
-  const [serverAddress, setServerAddress] = useState<string>('');
+  const { notification } = App.useApp();
+  const [, setServerAddress] = useState<string>('');
   const [jrebelAddress, setJrebelAddress] = useState<string>('');
-  const [guid, setGuid] = useState<string>('');
+  const [, setGuid] = useState<string>('');
   const [copying, setCopying] = useState<{[key: string]: boolean}>({});
   const [regenerating, setRegenerating] = useState(false);
   
@@ -115,10 +116,21 @@ const JRebel: React.FC = () => {
   const copyToClipboard = (key: string, text: string) => {
     navigator.clipboard.writeText(text).then(() => {
       setCopying({ ...copying, [key]: true });
+
+      notification.success({
+        message: t('common.copied'),
+        duration: 3,
+      });
       
       setTimeout(() => {
         setCopying({ ...copying, [key]: false });
       }, 2000);
+    }).catch((error) => {
+      notification.error({
+        message: t('common.copyFail'),
+        duration: 3,
+      });
+      console.error('Copy failed:', error);
     });
   };
   

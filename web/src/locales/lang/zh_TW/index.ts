@@ -16,6 +16,7 @@ const zhTW = {
     reset: '重置',
     copy: '複製',
     copied: '已複製',
+    copyFail: '複製失敗，請手動複製',
     generate: '生成',
     success: '成功',
     error: '錯誤',
@@ -172,7 +173,7 @@ const zhTW = {
   mobaxterm: {
     title: 'MobaXterm 授權服務',
     subTitle: '生成 MobaXterm 專業版授權碼',
-    description: 'MobaXterm 是一款功能強大的終端工具，集成了 X 服務器和網絡工具。填寫下方表單生成 MobaXterm 專業版授權碼。',
+    description: 'MobaXterm 是一款功能強大的終端工具，集成了 X 伺服器和網路工具。填寫下方表單生成 MobaXterm 專業版授權碼。',
     usageNotice: '使用說明',
     warningDescription: '生成的授權碼僅供學習和測試使用。請支持正版軟件。',
     form: {

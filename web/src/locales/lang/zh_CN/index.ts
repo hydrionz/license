@@ -16,6 +16,7 @@ const zhCN = {
     reset: '重置',
     copy: '复制',
     copied: '已复制',
+    copyFail: '复制失败，请手动复制',
     generate: '生成',
     success: '成功',
     error: '错误',

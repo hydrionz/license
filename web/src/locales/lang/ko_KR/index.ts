@@ -16,6 +16,7 @@ const koKR = {
     reset: '초기화',
     copy: '복사',
     copied: '복사됨',
+    copyFail: '복사 실패, 수동으로 복사해 주세요',
     generate: '생성',
     success: '성공',
     error: '오류',
@@ -73,7 +74,6 @@ const koKR = {
     powerConfConfig: 'power.conf 구성',
     activationCode: '인증 코드',
     copySuccess: '성공적으로 복사되었습니다',
-    copyFail: '복사 실패, 수동으로 복사해 주세요',
     serverRuleFetchError: '서버 규칙 가져오기 실패',
     licenseGenerationError: '인증 코드 생성 실패',
     powerConfLabel: 'power.conf 구성'

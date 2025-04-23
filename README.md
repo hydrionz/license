@@ -1,6 +1,6 @@
-# License Management Service
+# 许可证管理服务
 
-A Go-based service for managing software license validation and authentication.
+一个基于Go语言的软件许可证验证和认证管理服务。
 
 ![GitHub commit activity](https://img.shields.io/github/commit-activity/t/nannanStrawberry314/license?color=blue)
 ![GitHub forks](https://img.shields.io/github/forks/nannanStrawberry314/license?style=flat&color=brightgreen)
@@ -10,121 +10,121 @@ A Go-based service for managing software license validation and authentication.
 ![GitHub Release](https://img.shields.io/github/v/release/nannanStrawberry314/license?color=brightgreen)
 ![Docker Pulls](https://img.shields.io/docker/pulls/raspberrycheese/license?color=blueviolet)
 
-[简体中文](README_CN.md) | [繁體中文](README_TW.md) | [Русский](README_RU.md) | [English](README.md) | [日本語](README_JP.md) | [한국어](README_KR.md)
+[简体中文](README.md) | [繁體中文](README_TW.md) | [Русский](README_RU.md) | [English](README_EN.md) | [日本語](README_JP.md) | [한국어](README_KR.md)
 
-## Features
+## 功能特点
 
-- License generation and validation for various software products
-- Support for JetBrains products, GitLab, FinalShell, MobaXterm, and JRebel
-- RESTful API interface built with Gin framework
-- Scheduled tasks with cron
-- Database storage with GORM (MySQL/SQLite support)
-- Secure encryption using RSA
-- Multilingual support (Simplified Chinese, Traditional Chinese, Russian, English, Japanese, Korean)
+- 各类软件产品的许可证生成与验证
+- 支持JetBrains产品、GitLab、FinalShell、MobaXterm和JRebel等软件
+- 基于Gin框架构建的RESTful API接口
+- 使用cron实现定时任务
+- 通过GORM支持数据库存储(MySQL/SQLite)
+- 采用RSA算法的安全加密
+- 多语言支持（简体中文、繁体中文、俄语、英语、日语、韩语）
 
-## Requirements
+## 系统要求
 
-- Go 1.24 or higher
-- MySQL database (or SQLite for development)
-- Docker (optional, for containerized deployment)
+- Go 1.24或更高版本
+- MySQL数据库(开发环境可使用SQLite)
+- Docker(可选，用于容器化部署)
 
-## Installation
+## 安装方式
 
-### Option 1: Direct Installation
+### 方式一：直接安装
 
-1. Clone the repository
+1. 克隆仓库
    ```
    git clone https://github.com/nannanStrawberry314/license.git
    cd license
    ```
 
-2. Install dependencies
+2. 安装依赖
    ```
    go mod download
    ```
 
-3. Configure environment variables (copy .env.example to .env and modify as needed)
+3. 配置环境变量(复制.env.example到.env并根据需要修改)
 
-4. Build and run
+4. 构建并运行
    ```
    go build -o license-server
    ./license-server
    ```
 
-### Option 2: Docker Deployment
+### 方式二：Docker部署
 
-1. Build the Docker image
+1. 构建Docker镜像
    ```
    docker build -t license-server .
    ```
 
-2. Run using docker-compose
+2. 使用docker-compose运行
    ```
    docker-compose up -d
    ```
 
-## Configuration
+## 配置说明
 
-Configuration is handled through environment variables and the `.env` file:
+配置通过环境变量和`.env`文件进行管理：
 
-- `HTTP_HOST`: The host address to bind the server
-- `HTTP_PORT`: The port to listen on
-- `DB_TYPE`: Database type (mysql or sqlite)
-- `DB_DSN`: Database connection string
+- `HTTP_HOST`：服务器绑定的主机地址
+- `HTTP_PORT`：监听的端口
+- `DB_TYPE`：数据库类型(mysql或sqlite)
+- `DB_DSN`：数据库连接字符串
 
-## GitHub Actions Configuration
+## GitHub Actions配置
 
-This project includes GitHub Actions workflows for automated building, testing, and releasing. To use these workflows, you need to configure the following repository secrets:
+本项目包含GitHub Actions工作流，用于自动构建、测试和发布。要使用这些工作流，您需要配置以下仓库密钥：
 
-- `HUB_USER`: Your Docker Hub username
-- `HUB_PASS`: Your Docker Hub password
-- `HUB_REPO`: Docker Hub repository name
-- `PUBLIC_REPO_TOKEN`: (Optional) Personal access token with write permissions to the public repository
-- `PUBLIC_REPO`: (Optional) Public repository path in the format `username/repo`
+- `HUB_USER`：您的Docker Hub用户名
+- `HUB_PASS`：您的Docker Hub密码
+- `HUB_REPO`：Docker Hub仓库名称
+- `PUBLIC_REPO_TOKEN`：（可选）具有对公共仓库写入权限的个人访问令牌
+- `PUBLIC_REPO`：（可选）公共仓库路径，格式为`用户名/仓库名`
 
-The workflows include:
-- Building and testing on each push
-- Docker image building and publishing on tags or manual triggers
-- Creating GitHub releases
-- Synchronizing releases to a public repository (only for manual triggers, requires `PUBLIC_REPO_TOKEN` and `PUBLIC_REPO`)
+工作流包括：
+- 每次推送时进行构建和测试
+- 在标签推送或手动触发时构建和发布Docker镜像
+- 创建GitHub发布版本
+- 将发布同步到公共仓库（仅在手动触发时执行，需要配置`PUBLIC_REPO_TOKEN`和`PUBLIC_REPO`）
 
-## API Endpoints
+## API接口
 
-The API provides various endpoints for license management:
+该服务提供多个许可证管理相关的API接口：
 
-- `POST /v1/generate`: Generate a new license
-- `POST /v1/validate`: Validate an existing license
-- `GET /v1/status`: Check the service status
+- `POST /v1/generate`：生成新的许可证
+- `POST /v1/validate`：验证现有许可证
+- `GET /v1/status`：检查服务状态
 
-Refer to the API documentation for detailed usage instructions.
+详细使用说明请参考API文档。
 
-## Development
+## 开发指南
 
-To contribute to this project:
+如需贡献代码：
 
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Submit a pull request
+1. Fork本仓库
+2. 创建功能分支
+3. 提交您的更改
+4. 发起拉取请求
 
-## Disclaimer
+## 免责声明
 
-### Project Purpose
+### 项目目的
 
-This project has been developed and shared solely for educational purposes, aiming to provide opportunities for technical research and academic learning. The technologies and methods discussed in this project are intended only for learning and research purposes.
+本项目被开发和分享仅用于教育目的，旨在提供技术研究和学术学习的机会。项目内容涉及的技术和方法仅供学习和研究使用。
 
-### Usage Restrictions
+### 使用限制
 
-The author of this project has published it not to encourage software piracy or any form of illegal activity, but rather to promote knowledge sharing and technological advancement. **It is strictly prohibited to use this project to crack, activate, or illegally use software in any way**. Users must comply with all applicable local and international laws and regulations when using this project.
+项目作者发布此项目的目的不是鼓励软件盗版或任何形式的非法活动，而是为了促进知识的共享和技术的进步。**严禁将本项目用于破解、激活或以任何方式非法使用软件**。用户在使用本项目时，必须遵守所有适用的当地和国际法律法规。
 
-### Commercial Use Prohibition
+### 商业用途禁止
 
-This project is **strictly prohibited for commercial use** or any form of profit-making activity. No part of the project may be used in any context that might directly or indirectly generate economic benefits.
+本项目**严禁用于商业用途**或任何形式的盈利活动。项目的任何部分都不得在任何可能直接或间接产生经济利益的场合中使用。
 
-### Disclaimer of Liability
+### 免责声明
 
-This project is provided "as is" without any warranties, expressed or implied. The project author does not assume any responsibility for any form of damage or legal consequences that may result from the use of this project content. By using this project, you understand and agree to these terms, and you will assume all risks associated with using this project.
+本项目以"按原样"方式提供，不附带任何明示或暗示的保证。项目作者对于使用本项目内容可能导致的任何形式的损害或法律后果不承担任何责任。使用本项目表示您理解并同意这些条件，并且您将自行承担使用本项目的所有风险。
 
-## Star History
+## Star历史
 
-[![Star History Chart](https://api.star-history.com/svg?repos=nannanStrawberry314/license&type=Date)](https://www.star-history.com/#nannanStrawberry314/license&Date)
+[![Star History Chart](https://api.star-history.com/svg?repos=nannanStrawberry314/license&type=Date)](https://www.star-history.com/#nannanStrawberry314/license&Date) 

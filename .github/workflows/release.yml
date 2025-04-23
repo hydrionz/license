@@ -97,7 +97,7 @@ jobs:
           elif [[ "${{ github.ref }}" == refs/tags/* ]]; then
             VERSION="${{ github.ref_name }}"
           else
-            VERSION=$(git describe --tags --abbrev=0 2>/dev/null || echo "1.0.0")
+            VERSION=$(git describe --tags --abbrev=0 2>/dev/null || echo "0.0.1")
           fi
           
           # 提取不带v前缀的版本号用于Docker镜像标签

@@ -29,7 +29,7 @@ docker buildx use $BUILDER_NAME
 docker buildx inspect --bootstrap
 
 # VERSION - 获取最新的tag并去除开头的'v'
-VERSION=$(git describe --tags --abbrev=0 2>/dev/null || echo "1.0.0")
+VERSION=$(git describe --tags --abbrev=0 2>/dev/null || echo "0.0.1")
 # 如果版本号以'v'开头，则去除这个'v'
 VERSION=$(echo $VERSION | sed 's/^v//')
 echo "Using version: $VERSION"
@@ -38,6 +38,7 @@ echo "Using version: $VERSION"
 docker buildx build \
   --no-cache \
   --platform linux/amd64,linux/arm64 \
+  --build-arg VERSION=$VERSION \
   -t ${HUB_USER}/${HUB_REPO}:$VERSION \
   -t ${HUB_USER}/${HUB_REPO}:latest . \
   --push \

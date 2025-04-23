@@ -27,29 +27,13 @@ export const fetchVersions = async (): Promise<string[]> => {
     const response = await api.get('/mobaxterm/versions');
     console.log('API response:', response);
     
-    // Extract data from the response
-    if (response && response.data) {
-      if (Array.isArray(response.data)) {
-        // Direct array response
-        console.log('Direct array response:', response.data);
-        return response.data;
-      } else if (response.data.data && Array.isArray(response.data.data)) {
-        // Nested data object
-        console.log('Nested data object:', response.data.data);
-        return response.data.data;
-      } else if (typeof response.data === 'object') {
-        // Try to extract any array in the response
-        console.log('Looking for arrays in response');
-        for (const key in response.data) {
-          if (Array.isArray(response.data[key])) {
-            console.log(`Found array in key ${key}:`, response.data[key]);
-            return response.data[key];
-          }
-        }
-      }
+    // 后端直接返回数组
+    if (Array.isArray(response)) {
+      console.log('Got array response directly:', response);
+      return response;
     }
     
-    console.warn('Could not extract versions from response', response);
+    console.warn('Unexpected response format:', response);
     return [];
   } catch (error) {
     console.error('Error fetching versions:', error);

@@ -81,9 +81,9 @@ const GitLab: React.FC = () => {
       </Paragraph>
 
       <Alert
-        message={t('gitlab.warning')}
+        message={t('gitlab.usageNotice')}
         description={t('gitlab.warningDescription')}
-        type="warning"
+        type="info"
         showIcon
         style={{ marginBottom: 24 }}
       />

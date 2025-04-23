@@ -77,7 +77,6 @@ const MobaXterm: React.FC = () => {
     // Set initial form value with default version
     form.setFieldsValue({ 
       version: fallbackVersions[0],
-      username: "MobaXterm User",
       count: "1000"
     });
 
@@ -94,15 +93,27 @@ const MobaXterm: React.FC = () => {
       try {
         console.log('Fetching versions...');
         const fetchedVersions = await mobaxterm.fetchVersions();
-        console.log('Versions response:', fetchedVersions);
+        console.log('Fetched versions:', fetchedVersions);
         
-        if (fetchedVersions && fetchedVersions.length > 0) {
-          setVersions(fetchedVersions);
-          // Update form value
-          form.setFieldsValue({ version: fetchedVersions[0] });
-          console.log('Setting version to:', fetchedVersions[0]);
+        if (fetchedVersions && Array.isArray(fetchedVersions) && fetchedVersions.length > 0) {
+          // 确保state更新
+          setVersions([...fetchedVersions]);
+          // 需要确保版本值已经被设置，并保留已有的用户名和数量
+          setTimeout(() => {
+            const currentValues = form.getFieldsValue();
+            form.setFieldsValue({ 
+              version: fetchedVersions[0],
+              count: currentValues.count || "1000"
+            });
+            console.log('Updated form with version:', fetchedVersions[0]);
+          }, 0);
         } else {
-          console.log('Using fallback versions');
+          console.log('Using fallback versions - invalid response');
+          const currentValues = form.getFieldsValue();
+          form.setFieldsValue({ 
+            version: fallbackVersions[0],
+            count: currentValues.count || "1000"
+          });
         }
       } catch (error) {
         console.error('Failed to fetch versions:', error);
@@ -174,9 +185,9 @@ const MobaXterm: React.FC = () => {
       </Paragraph>
 
       <Alert
-        message={t('mobaxterm.warning')}
+        message={t('mobaxterm.usageNotice')}
         description={t('mobaxterm.warningDescription')}
-        type="warning"
+        type="info"
         showIcon
         style={{ marginBottom: 24 }}
       />
@@ -195,11 +206,19 @@ const MobaXterm: React.FC = () => {
             name="version"
             label={t('mobaxterm.form.version')}
             rules={[{ required: true, message: t('mobaxterm.form.versionPlaceholder') }]}
+            initialValue={fallbackVersions[0]}
           >
             <Select 
               placeholder={t('mobaxterm.form.versionPlaceholder')}
               loading={loadingVersions}
               notFoundContent={loadingVersions ? <Spin size="small" /> : null}
+              showSearch
+              optionFilterProp="children"
+              onDropdownVisibleChange={(open) => {
+                if (open) {
+                  console.log('Dropdown opened, available versions:', versions);
+                }
+              }}
             >
               {versions.map((version) => (
                 <Option key={version} value={version}>
@@ -210,11 +229,42 @@ const MobaXterm: React.FC = () => {
           </Form.Item>
 
           <Form.Item
-            name="count"
             label={t('mobaxterm.form.count')}
-            rules={[{ required: true, message: t('mobaxterm.form.countPlaceholder') }]}
+            name="count"
+            initialValue="1000"
+            rules={[
+              {
+                required: true,
+                message: t('mobaxterm.form.countPlaceholder')
+              },
+              {
+                pattern: /^[1-9]\d*$/,
+                message: t('mobaxterm.form.countInvalid')
+              }
+            ]}
           >
-            <Input placeholder={t('mobaxterm.form.countPlaceholder')} />
+            <Input 
+              placeholder={t('mobaxterm.form.countPlaceholder')} 
+              type="number"
+              min={1}
+              step={1}
+              onKeyDown={(e) => {
+                // Prevent typing e, +, - or decimal point
+                if (['+', '-', 'e', '.'].includes(e.key)) {
+                  e.preventDefault();
+                }
+              }}
+              onChange={(e) => {
+                // Remove any leading zeros
+                if (e.target.value.startsWith('0')) {
+                  e.target.value = e.target.value.replace(/^0+/, '');
+                }
+                // If empty after removing zeros, set to empty
+                if (e.target.value === '') {
+                  e.target.value = '';
+                }
+              }}
+            />
           </Form.Item>
 
           <Form.Item>

@@ -30,6 +30,10 @@ const enUS = {
         title: 'JetBrains Authorization Service',
         description: 'Obtain authorization information for all JetBrains products, including IntelliJ IDEA, PyCharm, WebStorm, etc.'
       },
+      jrebel: {
+        title: 'JRebel Authorization Service',
+        description: 'Provide authorization service for JRebel hot deployment tool'
+      },
       gitlab: {
         title: 'GitLab Authorization Service',
         description: 'Create enterprise authorization for GitLab, unlocking all advanced features'
@@ -41,10 +45,6 @@ const enUS = {
       mobaxterm: {
         title: 'MobaXterm Authorization Service',
         description: 'Unlock MobaXterm advanced features, obtain professional authorization'
-      },
-      jrebel: {
-        title: 'JRebel Authorization Service',
-        description: 'Provide authorization service for JRebel hot deployment tool'
       }
     }
   },
@@ -78,11 +78,32 @@ const enUS = {
     licenseGenerationError: 'Failed to generate authorization code',
     powerConfLabel: 'power.conf Configuration'
   },
+  jrebel: {
+    title: 'JRebel Authorization Service',
+    subTitle: 'Provide authorization service for JRebel hot deployment tool',
+    description: 'JRebel is a powerful Java hot deployment tool that allows you to see code changes in real-time without restarting the application server.',
+    usageNotice: 'Usage Instructions',
+    activationDescription: 'This service provides JRebel activation. Use the dedicated server address to activate JRebel.',
+    serverConfig: 'Server Authorization Configuration',
+    configurationDetails: 'Configuration Details',
+    baseServerAddress: 'Base Server Address',
+    guid: 'Unique Identifier (GUID)',
+    regenerateGuid: 'Regenerate GUID',
+    regenerateGuidButton: 'Regenerate',
+    configurationRules: 'Configuration Rules',
+    activationSteps: 'JRebel Activation Steps',
+    step1: 'Open your IDE (e.g., IntelliJ IDEA)',
+    step2: 'Find the JRebel plugin settings',
+    step3: 'Choose "Team URL" activation method',
+    step4: 'Enter the server address above in the URL field',
+    step5: 'Enter any valid email address in the email field',
+    step6: 'Click "Activate" to complete the activation'
+  },
   gitlab: {
     title: 'GitLab Authorization Service',
     subTitle: 'Create enterprise license for GitLab',
     description: 'Fill in the form below to generate a GitLab enterprise license. The generated license can be used to activate all features of GitLab Enterprise Edition.',
-    warning: 'Important Notice',
+    usageNotice: 'Usage Instructions',
     warningDescription: 'The generated GitLab license is for learning and testing purposes only, not for commercial use.',
     form: {
       name: 'Name',
@@ -109,59 +130,11 @@ const enUS = {
       downloadFailed: 'License generation failed, please try again'
     }
   },
-  mobaxterm: {
-    title: 'MobaXterm Authorization Service',
-    subTitle: 'Generate activation code for MobaXterm Professional Edition',
-    description: 'MobaXterm is a powerful terminal tool with X server and network tools. Fill in the form below to generate an activation code for MobaXterm Professional Edition.',
-    warning: 'Important Notice',
-    warningDescription: 'The generated activation code is for learning and testing purposes only. Please support the original software.',
-    form: {
-      username: 'Username',
-      usernamePlaceholder: 'Please enter username',
-      version: 'Software Version',
-      versionPlaceholder: 'Please select version',
-      count: 'License Count',
-      countPlaceholder: 'Please enter license count',
-      generateButton: 'Generate Activation Code'
-    },
-    success: {
-      title: 'MobaXterm Activation Code Generated Successfully',
-      downloadStarted: 'License file download has started'
-    },
-    instructionsTitle: 'Usage Instructions',
-    usageSteps: {
-      step1: 'Open MobaXterm software',
-      step2: 'Click the "?" button in the top right, then select "Register"',
-      step3: 'Enter the username and activation code generated above',
-      step4: 'Click "OK" to complete activation'
-    }
-  },
-  jrebel: {
-    title: 'JRebel Authorization Service',
-    subTitle: 'Provide authorization service for JRebel hot deployment tool',
-    description: 'JRebel is a powerful Java hot deployment tool that allows you to see code changes in real-time without restarting the application server.',
-    activationTitle: 'Activation Instructions',
-    activationDescription: 'This service provides JRebel activation. Use the dedicated server address to activate JRebel.',
-    serverConfig: 'Server Authorization Configuration',
-    configurationDetails: 'Configuration Details',
-    baseServerAddress: 'Base Server Address',
-    guid: 'Unique Identifier (GUID)',
-    regenerateGuid: 'Regenerate GUID',
-    regenerateGuidButton: 'Regenerate',
-    configurationRules: 'Configuration Rules',
-    activationSteps: 'JRebel Activation Steps',
-    step1: 'Open your IDE (e.g., IntelliJ IDEA)',
-    step2: 'Find the JRebel plugin settings',
-    step3: 'Choose "Team URL" activation method',
-    step4: 'Enter the server address above in the URL field',
-    step5: 'Enter any valid email address in the email field',
-    step6: 'Click "Activate" to complete the activation'
-  },
   finalshell: {
     title: 'FinalShell Authorization Service',
     subTitle: 'Generate registration code for FinalShell SSH tool',
     description: 'FinalShell is an excellent SSH client tool. Fill in the form below to generate a registration code for FinalShell to unlock all professional features.',
-    warning: 'Important Notice',
+    usageNotice: 'Usage Instructions',
     warningDescription: 'The generated registration code is for learning and testing purposes only. Please support the original software.',
     machineCode: 'Machine Code',
     enterMachineCode: 'Please enter machine code',
@@ -180,6 +153,35 @@ const enUS = {
       proBelow396: 'Version < 3.9.6 Professional Edition',
       advancedAbove396: 'Version >= 3.9.6 Advanced Edition',
       proAbove396: 'Version >= 3.9.6 Professional Edition'
+    }
+  },
+  mobaxterm: {
+    title: 'MobaXterm Authorization Service',
+    subTitle: 'Generate activation code for MobaXterm Professional Edition',
+    description: 'MobaXterm is a powerful terminal tool with X server and network tools. Fill in the form below to generate an activation code for MobaXterm Professional Edition.',
+    usageNotice: 'Usage Instructions',
+    warningDescription: 'The generated activation code is for learning and testing purposes only. Please support the original software.',
+    form: {
+      username: 'Username',
+      usernamePlaceholder: 'Please enter username',
+      version: 'Software Version',
+      versionPlaceholder: 'Please select version',
+      count: 'License Count',
+      countPlaceholder: 'Please enter license count',
+      countInvalid: 'Please enter a positive integer',
+      generateButton: 'Generate Activation Code',
+      getAuthCode: 'Get Authorization Code'
+    },
+    success: {
+      title: 'MobaXterm Activation Code Generated Successfully',
+      downloadStarted: 'License file download has started'
+    },
+    instructionsTitle: 'Usage Instructions',
+    usageSteps: {
+      step1: 'Open MobaXterm software',
+      step2: 'Click the "?" button in the top right, then select "Register"',
+      step3: 'Enter the username and activation code generated above',
+      step4: 'Click "OK" to complete activation'
     }
   }
 };

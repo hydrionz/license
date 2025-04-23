@@ -29,6 +29,11 @@ const api = {
         return response.data as T;
       }
       
+      // 特殊处理MobaXterm版本接口，直接返回数组
+      if (url.includes('/mobaxterm/versions')) {
+        return response.data as T;
+      }
+      
       const apiResponse = response.data as ApiResponse<T>;
       
       if (apiResponse.status !== 0) {

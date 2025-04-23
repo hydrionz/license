@@ -155,9 +155,9 @@ const FinalShell: React.FC = () => {
       </Paragraph>
 
       <Alert
-        message={t('finalshell.warning')}
+        message={t('finalshell.usageNotice')}
         description={t('finalshell.warningDescription')}
-        type="warning"
+        type="info"
         showIcon
         style={{ marginBottom: 24 }}
       />

@@ -158,7 +158,7 @@ const JRebel: React.FC = () => {
       </Paragraph>
 
       <Alert
-        message={t('jrebel.activationTitle')}
+        message={t('jrebel.usageNotice')}
         description={t('jrebel.activationDescription')}
         type="info"
         showIcon

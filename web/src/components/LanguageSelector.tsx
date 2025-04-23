@@ -16,7 +16,8 @@ const LanguageSelector: React.FC = () => {
     
     if (savedLanguage) {
       let lang = 'en';
-      if (savedLanguage.startsWith('zh')) lang = 'zh';
+      if (savedLanguage.startsWith('zh-CN') || savedLanguage === 'zh-Hans' || savedLanguage === 'zh_CN') lang = 'zh-CN';
+      if (savedLanguage.startsWith('zh-TW') || savedLanguage === 'zh-Hant' || savedLanguage === 'zh_TW') lang = 'zh-TW';
       if (savedLanguage.startsWith('ja')) lang = 'ja';
       if (savedLanguage.startsWith('ko')) lang = 'ko';
       
@@ -31,9 +32,10 @@ const LanguageSelector: React.FC = () => {
       const browserLang = navigator.language || (navigator as any).userLanguage;
       let detectedLang = 'en';
       
-      if (browserLang && browserLang.startsWith('zh')) detectedLang = 'zh';
-      if (browserLang && browserLang.startsWith('ja')) detectedLang = 'ja';
-      if (browserLang && browserLang.startsWith('ko')) detectedLang = 'ko';
+      if (browserLang && browserLang.startsWith('zh-CN') || browserLang === 'zh-Hans') detectedLang = 'zh-CN';
+      if (browserLang && browserLang.startsWith('zh-TW') || browserLang === 'zh-Hant') detectedLang = 'zh-TW';
+      if (browserLang && (browserLang.startsWith('ja'))) detectedLang = 'ja';
+      if (browserLang && (browserLang.startsWith('ko'))) detectedLang = 'ko';
       
       setCurrentLanguage(detectedLang);
       i18n.changeLanguage(detectedLang);
@@ -59,7 +61,8 @@ const LanguageSelector: React.FC = () => {
       dropdownStyle={{ zIndex: 1100 }}
       prefix={<GlobalOutlined />}
     >
-      <Option value="zh">中文</Option>
+      <Option value="zh-CN">简体中文</Option>
+      <Option value="zh-TW">繁體中文</Option>
       <Option value="en">English</Option>
       <Option value="ja">日本語</Option>
       <Option value="ko">한국어</Option>

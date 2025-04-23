@@ -128,5 +128,3 @@ This project is provided "as is" without any warranties, expressed or implied. T
 ## Star History
 
 [![Star History Chart](https://api.star-history.com/svg?repos=nannanStrawberry314/license&type=Date)](https://www.star-history.com/#nannanStrawberry314/license&Date)
-
-[简体中文](README_CN.md) | [繁體中文](README_TW.md) | [Русский](README_RU.md) | [English](README.md) | [日本語](README_JP.md) | [한국어](README_KR.md) 

@@ -1,6 +1,12 @@
 # 라이선스 관리 서비스
 
-![Docker Pulls](https://img.shields.io/docker/pulls/ghostx/license-server)
+![GitHub commit activity](https://img.shields.io/github/commit-activity/t/nannanStrawberry314/license?color=blue)
+![GitHub forks](https://img.shields.io/github/forks/nannanStrawberry314/license?style=flat&color=brightgreen)
+![GitHub stars](https://img.shields.io/github/stars/nannanStrawberry314/license?color=orange)
+![GitHub pull requests](https://img.shields.io/github/issues-pr/nannanStrawberry314/license?color=red)
+![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/nannanStrawberry314/license/.github/workflows/release.yml?label=build)
+![GitHub Release](https://img.shields.io/github/v/release/nannanStrawberry314/license?color=brightgreen)
+![Docker Pulls](https://img.shields.io/docker/pulls/raspberrycheese/license?color=blueviolet)
 
 [简体中文](README_CN.md) | [繁體中文](README_TW.md) | [Русский](README_RU.md) | [English](README.md) | [日本語](README_JP.md) | [한국어](README_KR.md)
 

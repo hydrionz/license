@@ -54,14 +54,3 @@ func (ctrl *Controller) GenerateLicense(c *gin.Context) {
 	}
 	service.GenerateLicense(count, name, version, c)
 }
-
-// DebugHtmlStructure provides debugging information for the HTML structure.
-func (ctrl *Controller) DebugHtmlStructure(c *gin.Context) {
-	debugInfo, err := service.DebugHtmlStructure()
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to debug HTML structure", "details": err.Error()})
-		return
-	}
-	
-	c.JSON(http.StatusOK, debugInfo)
-}

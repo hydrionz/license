@@ -120,7 +120,6 @@ func SetupRouter(r *gin.RouterGroup) {
 			
 			mobaxtermApi.FetchVersions(c)
 		})
-		mobaxtermGroup.GET("/debug", mobaxtermApi.DebugHtmlStructure)
 	}
 
 	// jetbrains

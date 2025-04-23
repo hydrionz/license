@@ -123,40 +123,41 @@ const MainLayout: React.FC = () => {
   const [version, setVersion] = useState<string>("");
   const [needUpdate, setNeedUpdate] = useState<boolean>(false);
   const [latestVersion, setLatestVersion] = useState<string>("");
-  const fetchedRef = useRef(false);
+  const hasRequestedRef = useRef(false);
 
   useEffect(() => {
-    // Only fetch once during component lifecycle
-    let isMounted = true;
-    
-    const fetchVersion = async () => {
-      // Skip if already fetched
-      if (fetchedRef.current) return;
-      
-      // Mark as fetched immediately to prevent duplicate requests
-      fetchedRef.current = true;
-      
-      try {
-        const versionData = await server.getVersion();
-        
-        // Only update state if component is still mounted
-        if (isMounted && versionData) {
-          setVersion(versionData.version);
-          setNeedUpdate(versionData.needUpdate);
-          setLatestVersion(versionData.latestVersion || "");
-        }
-      } catch (error) {
-        console.error('Failed to fetch server version:', error);
+    const fetchWithDelay = setTimeout(() => {
+      if (!hasRequestedRef.current) {
+        hasRequestedRef.current = true;
+        fetchVersion();
       }
-    };
+    }, 50);
 
-    fetchVersion();
-    
-    // Cleanup function to handle component unmounting
-    return () => {
-      isMounted = false;
-    };
-  }, []); // Empty dependency array - run once on mount
+    return () => clearTimeout(fetchWithDelay);
+  }, []);
+
+  const fetchVersion = async () => {
+    try {
+      const timestamp = new Date().getTime();
+      const versionData = await server.getVersion(`?_t=${timestamp}`);
+      if (versionData && versionData.version) {
+        console.log('成功获取版本信息:', versionData);
+        setVersion(versionData.version);
+        setNeedUpdate(versionData.needUpdate);
+        setLatestVersion(versionData.latestVersion || "");
+      } else {
+        console.warn('版本数据不完整:', versionData);
+        if (!version) {
+          setVersion("0.0.1");
+        }
+      }
+    } catch (error) {
+      console.error('获取服务器版本失败:', error);
+      if (!version) {
+        setVersion("0.0.1");
+      }
+    }
+  };
 
   useEffect(() => {
     setIsMobile(responsive.isMobile());
@@ -169,9 +170,8 @@ const MainLayout: React.FC = () => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // 处理点击版本更新提示的事件
   const handleUpdateClick = (e: React.MouseEvent) => {
-    e.stopPropagation(); // 防止触发Logo点击事件
+    e.stopPropagation();
     window.open('https://github.com/nannanStrawberry314/license/releases/latest', '_blank');
   };
 

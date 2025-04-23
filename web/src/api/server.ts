@@ -17,11 +17,19 @@ export interface VersionInfo {
 
 /**
  * 获取服务器版本信息
+ * @param queryParam 可选的查询参数，用于避免缓存
  * @returns Promise<VersionInfo> 包含版本信息的Promise
  */
-export const getVersion = async (): Promise<VersionInfo> => {
+export const getVersion = async (queryParam?: string): Promise<VersionInfo> => {
   try {
-    const response = await axios.get<ServerVersionResponse>('/api/server/version');
+    const url = `/api/server/version${queryParam || ''}`;
+    const response = await axios.get<ServerVersionResponse>(url, {
+      headers: {
+        'Cache-Control': 'no-cache, no-store',
+        'Pragma': 'no-cache',
+        'Expires': '0'
+      }
+    });
     return {
       version: response.data.version,
       needUpdate: response.data.needUpdate,

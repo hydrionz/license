@@ -11,7 +11,7 @@ import (
 type JetbrainsRpcService struct {
 }
 
-// 确保Service实现了common.RpcService接口
+// Ensure Service implements the common.RpcService interface
 var _ service.RpcService = &JetbrainsRpcService{}
 
 // Ping handles the ping XML request and returns a signed response.

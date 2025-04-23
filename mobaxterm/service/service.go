@@ -139,40 +139,40 @@ func FetchVersions() ([]string, error) {
 
 // GenerateLicense generates a license for MobaXterm
 func GenerateLicense(count int, username, version string, c *gin.Context) {
-	// 检查参数是否为空或不符合要求
+	// Check if parameters are empty or invalid
 	if username == "" || version == "" || count <= 0 {
-		logger.Error("", fmt.Errorf("参数错误: %s, %s, %d", username, version, count))
+		logger.Error("", fmt.Errorf("parameter error: %s, %s, %d", username, version, count))
 	}
 
-	// 拆分版本号
+	// Split version number
 	versionArr := strings.Split(version, ".")
 	if len(versionArr) != 2 {
-		logger.Error("", fmt.Errorf("版本号格式错误: %s", version))
+		logger.Error("", fmt.Errorf("version format error: %s", version))
 	}
 
-	// 检查版本号是否为数字
+	// Check if version numbers are digits
 	if _, err := strconv.Atoi(versionArr[0]); err != nil {
 		// panic("版本号格式错误")
-		log.Printf("版本号格式错误: %s", version)
+		log.Printf("version format error: %s", version)
 	}
 	if _, err := strconv.Atoi(versionArr[1]); err != nil {
 		// panic("版本号格式错误")
-		log.Printf("版本号格式错误: %s", version)
+		log.Printf("version format error: %s", version)
 	}
 
-	// 提取主次版本号
+	// Extract major and minor version numbers
 	major, _ := strconv.ParseInt(versionArr[0], 10, 64)
 	minor, _ := strconv.ParseInt(versionArr[1], 10, 64)
 
 	license := generateLicense(1, count, username, major, minor)
-	// 先写入文件，解决直接输出压缩包文件大小不对导致无法使用的问题
+	// First write to file, solving the issue where direct output of zip file has incorrect size and cannot be used
 	toFile(license)
-	// 读取文件, 输出到浏览器
+	// Read file, output to browser
 	c.FileAttachment(config.GetConfig().DataDir+"/Custom.mxtpro", "Custom.mxtpro")
-	// 删除文件
+	// Delete file
 	err := os.Remove(config.GetConfig().DataDir + "/Custom.mxtpro")
 	if err != nil {
-		logger.Error("", fmt.Errorf("删除文件失败: %v", err))
+		logger.Error("", fmt.Errorf("failed to delete file: %v", err))
 	}
 }
 
@@ -181,13 +181,13 @@ func toFile(license []byte) {
 	_ = os.Remove(fileName)
 	f, err := os.Create(fileName)
 	if err != nil {
-		logger.Error("", fmt.Errorf("创建文件失败: %v", err))
+		logger.Error("", fmt.Errorf("failed to create file: %v", err))
 		return
 	}
 	defer func(f *os.File) {
 		err := f.Close()
 		if err != nil {
-			logger.Error("", fmt.Errorf("关闭文件失败: %v", err))
+			logger.Error("", fmt.Errorf("failed to close file: %v", err))
 		}
 	}(f)
 
@@ -195,7 +195,7 @@ func toFile(license []byte) {
 	defer func(zipFile *zip.Writer) {
 		err := zipFile.Close()
 		if err != nil {
-			logger.Error("", fmt.Errorf("关闭ZIP写入器失败: %v", err))
+			logger.Error("", fmt.Errorf("failed to close ZIP writer: %v", err))
 		}
 	}(zipFile)
 	header := &zip.FileHeader{
@@ -204,16 +204,16 @@ func toFile(license []byte) {
 		CompressedSize64:   38,
 		UncompressedSize64: 38,
 	}
-	// TODO 关键点，放到FileHeader会导致文件大小不对
+	// TODO Key point, putting it in FileHeader will cause incorrect file size
 	header.SetModTime(time.Now())
 	proFile, err := zipFile.CreateRaw(header)
 	if err != nil {
-		logger.Error("", fmt.Errorf("创建ZIP文件失败: %v", err))
+		logger.Error("", fmt.Errorf("failed to create ZIP file: %v", err))
 		return
 	}
 	_, err = proFile.Write(license)
 	if err != nil {
-		logger.Error("", fmt.Errorf("写入ZIP文件失败: %v", err))
+		logger.Error("", fmt.Errorf("failed to write to ZIP file: %v", err))
 		return
 	}
 	return

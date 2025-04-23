@@ -21,13 +21,13 @@ type Config struct {
 
 var globalConfig *Config
 
-// InitConfig 初始化全局配置
+// InitConfig initializes global configuration
 func InitConfig() {
 	if globalConfig != nil {
 		logger.Info("Config is already initialized")
 		return
 	}
-	// 加载.env文件
+	// Load .env file
 	err := godotenv.Load()
 	if err != nil {
 		log.Println("No .env file found")
@@ -46,7 +46,7 @@ func InitConfig() {
 	}
 }
 
-// getEnvStr 读取环境变量或返回默认值
+// getEnvStr reads environment variable or returns default value
 func getEnvStr(key, defaultValue string) string {
 	if value, exists := os.LookupEnv(key); exists {
 		return value
@@ -54,7 +54,7 @@ func getEnvStr(key, defaultValue string) string {
 	return defaultValue
 }
 
-// getEnvInt 读取环境变量或返回默认值
+// getEnvInt reads environment variable or returns default value
 func getEnvInt(key string, defaultValue int) int {
 	if value, exists := os.LookupEnv(key); exists {
 		intValue, err := strconv.Atoi(value)
@@ -65,7 +65,7 @@ func getEnvInt(key string, defaultValue int) int {
 	return defaultValue
 }
 
-// getEnvBool 读取环境变量或返回默认值
+// getEnvBool reads environment variable or returns default value
 func getEnvBool(key string, defaultValue bool) bool {
 	if value, exists := os.LookupEnv(key); exists {
 		boolValue, err := strconv.ParseBool(value)
@@ -76,11 +76,11 @@ func getEnvBool(key string, defaultValue bool) bool {
 	return defaultValue
 }
 
-// GetConfig 提供全局配置的访问
+// GetConfig provides access to global configuration
 func GetConfig() *Config {
 	if globalConfig == nil {
 		logger.Info("Config is not initialized")
-		// 未初始化，执行初始化
+		// Not initialized, perform initialization
 		InitConfig()
 	}
 	return globalConfig

@@ -22,7 +22,7 @@ var Fake = &FakeCert{
 	ServerUID: "lemon",
 }
 
-// GeneratePowerResult 生成power.conf配置
+// GeneratePowerResult generates power.conf configuration
 func GeneratePowerResult(cert, rootCA *x509.Certificate) string {
 	x := (&big.Int{}).SetBytes(cert.Signature)
 	z := rootCA.PublicKey.(*rsa.PublicKey).N
@@ -164,7 +164,7 @@ func (c *FakeCert) LoadCert() (err error) {
 	return
 }
 
-// 判断文件是否存在
+// Check if file exists
 func fileExists(filename string) bool {
 	_, err := os.Stat(filename)
 	if os.IsNotExist(err) {
@@ -174,7 +174,7 @@ func fileExists(filename string) bool {
 }
 
 func (c *FakeCert) GenerateRootCert() (err error) {
-	// 判断文件是否存在，不存在则生成
+	// Check if files exist, generate if they don't
 	logger.Info("GenerateCodeCert")
 	if !fileExists(CodeCertPath) {
 		jetCert, err := GenerateRootCertificate(c.PrivateKey, "lemon", c.CodeRootCert.Issuer.CommonName)

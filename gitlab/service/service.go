@@ -21,39 +21,39 @@ import (
 var privateKey string
 var publicKey string
 
-// LoadKeys 读取、解码并解析RSA私钥和公钥。
+// LoadKeys reads, decodes and parses RSA private and public keys.
 func LoadKeys() {
-	// 读取公钥
+	// Read public key
 	publicBytes, err := os.ReadFile(config.GetConfig().DataDir + "/.license_encryption_key.pub")
 	if err != nil {
-		log.Printf("读取公钥文件失败: %v", err)
+		log.Printf("Failed to read public key file: %v", err)
 		return
 	}
-	// 转成字符串
+	// Convert to string
 	publicKey = string(publicBytes)
 
-	// 读取私钥
+	// Read private key
 	privateBytes, err := os.ReadFile(config.GetConfig().DataDir + "/.license_decryption_key.pri")
 	if err != nil {
-		log.Printf("读取私钥文件失败: %v", err)
+		log.Printf("Failed to read private key file: %v", err)
 		return
 	}
-	// 转成字符串
+	// Convert to string
 	privateKey = string(privateBytes)
 }
 
-// createLicenseJson 创建许可证的JSON表示
+// createLicenseJson creates a JSON representation of the license
 func createLicenseJson(licenseInfo entity.LicenseInfo, expireTime string) (string, error) {
 
 	var expirationDate time.Time
 	var err error
 	if len(expireTime) == 0 {
-		// 默认过期时间为2年
+		// Default expiration time is 2 years
 		expirationDate = time.Now().AddDate(2, 0, 0)
 	} else {
 		expirationDate, err = time.Parse(time.DateTime, expireTime)
 		if err != nil {
-			log.Printf("解析过期时间失败: %v", err)
+			log.Printf("Failed to parse expiration time: %v", err)
 			return "", err
 		}
 	}
@@ -86,16 +86,16 @@ func createLicenseJson(licenseInfo entity.LicenseInfo, expireTime string) (strin
 	return string(jsonData), nil
 }
 
-// generateRandomIV 生成随机的初始化向量(IV)
+// generateRandomIV generates a random initialization vector (IV)
 func generateRandomIV() ([]byte, error) {
-	iv := make([]byte, aes.BlockSize) // AES的块大小固定为16字节
+	iv := make([]byte, aes.BlockSize) // AES block size is fixed at 16 bytes
 	if _, err := rand.Read(iv); err != nil {
 		return nil, err
 	}
 	return iv, nil
 }
 
-// Encrypt 封装 Encrypt 方法，使用 AES-CBC 加密和 PKCS7 填充
+// Encrypt wraps the Encrypt method, using AES-CBC encryption and PKCS7 padding
 func Encrypt(data, key, iv []byte) ([]byte, error) {
 	aesTool := crypto.AesCbcPkcs7{Key: key, Iv: iv}
 	enc, err := aesTool.Encrypt(data)
@@ -106,49 +106,49 @@ func Encrypt(data, key, iv []byte) ([]byte, error) {
 	return enc, err
 }
 
-// 使用 RSA 私钥"加密"数据
+// Uses RSA private key to "encrypt" data
 func encryptWithPrivateKey(data string) (string, error) {
 	encrypt, err := gorsa.PriKeyEncrypt(data, privateKey)
 	if err != nil {
-		log.Printf("使用RSA私钥加密数据失败: %v", err)
+		log.Printf("Failed to encrypt data with RSA private key: %v", err)
 		return "", err
 	}
 	return encrypt, nil
 }
 
-// encryptLicense 使用AES和RSA加密许可证数据
+// encryptLicense encrypts license data using AES and RSA
 func encryptLicense(data string) (string, error) {
-	// 生成256位AES密钥
+	// Generate 256-bit AES key
 	key := make([]byte, 16)
 	if _, err := rand.Read(key); err != nil {
-		log.Printf("生成AES密钥失败: %v", err)
+		log.Printf("Failed to generate AES key: %v", err)
 		return "", err
 	}
 
-	// 生成随机IV
+	// Generate random IV
 	iv, err := generateRandomIV()
 	if err != nil {
-		log.Printf("生成AES IV失败: %v", err)
+		log.Printf("Failed to generate AES IV: %v", err)
 		return "", err
 	}
 
 	encryptedData, err := Encrypt([]byte(data), key, iv)
 	if err != nil {
-		log.Printf("加密数据失败: %v", err)
+		log.Printf("Failed to encrypt data: %v", err)
 		return "", err
 	}
 
-	// 注意：RSA 加密通常是用公钥完成的，但技术上可以用私钥进行加密（即使不推荐）
+	// Note: RSA encryption is typically done with a public key, but technically can be done with a private key (although not recommended)
 	encryptedKey, err := encryptWithPrivateKey(string(key))
 	if err != nil {
 		return "", err
 	}
 
-	// 将加密数据编码为Base64
+	// Encode encrypted data as Base64
 	encryptedDataStr := base64.StdEncoding.EncodeToString(encryptedData)
 	ivStr := base64.StdEncoding.EncodeToString(iv)
 
-	// 封装为JSON格式
+	// Package as JSON format
 	result := map[string]string{
 		"data": encryptedDataStr,
 		"key":  encryptedKey,
@@ -156,51 +156,51 @@ func encryptLicense(data string) (string, error) {
 	}
 	jsonData, err := json.Marshal(result)
 	if err != nil {
-		log.Printf("封装JSON数据失败: %v", err)
+		log.Printf("Failed to package JSON data: %v", err)
 		return "", err
 	}
 
-	// 将JSON编码为Base64
+	// Encode JSON as Base64
 	encodedFinal := base64.StdEncoding.EncodeToString(jsonData)
 	return encodedFinal, nil
 }
 
-// Generate 生成许可证并通过HTTP响应发送
+// Generate generates a license and sends it via HTTP response
 func Generate(ctx *gin.Context, licenseInfo entity.LicenseInfo, expireTime string) {
 	createLicense(ctx, licenseInfo, expireTime)
 }
 
-// createLicense 创建并发送许可证
+// createLicense creates and sends a license
 func createLicense(ctx *gin.Context, licenseInfo entity.LicenseInfo, expireTime string) {
-	// 创建许可证的JSON数据
+	// Create license JSON data
 	licenseJson, err := createLicenseJson(licenseInfo, expireTime)
 	if err != nil {
-		log.Printf("创建许可证JSON失败: %v", err)
-		ctx.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": "内部服务器错误"})
+		log.Printf("Failed to create license JSON: %v", err)
+		ctx.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
 		return
 	}
 
-	// 对许可证数据进行加密
+	// Encrypt the license data
 	encryptedLicense, err := encryptLicense(licenseJson)
 	if err != nil {
-		log.Printf("加密许可证失败: %v", err)
-		ctx.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": "内部服务器错误"})
+		log.Printf("Failed to encrypt license: %v", err)
+		ctx.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
 		return
 	}
 
-	// 导出包含加密许可证和公钥文件的ZIP文件
+	// Export a ZIP file containing the encrypted license and public key file
 	err = exportZipStream(ctx, encryptedLicense)
 	if err != nil {
-		log.Printf("导出ZIP文件失败: %v", err)
-		ctx.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": "内部服务器错误"})
+		log.Printf("Failed to export ZIP file: %v", err)
+		ctx.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
 		return
 	}
 }
 
-// exportZipStream 创建并发送包含加密许可证和公钥文件的ZIP文件
+// exportZipStream creates and sends a ZIP file containing the encrypted license and public key file
 func exportZipStream(ctx *gin.Context, encryptedLicense string) error {
-	// 设置响应头部以便文件下载
-	ctx.Status(http.StatusOK) // 明确设置状态码为200 OK
+	// Set response headers for file download
+	ctx.Status(http.StatusOK) // Explicitly set status code to 200 OK
 	ctx.Header("Content-Disposition", "attachment; filename=license.zip")
 	ctx.Header("Content-Type", "application/zip")
 
@@ -208,16 +208,16 @@ func exportZipStream(ctx *gin.Context, encryptedLicense string) error {
 	defer func(zipWriter *zip.Writer) {
 		err := zipWriter.Close()
 		if err != nil {
-			log.Printf("关闭ZIP写入器失败: %v", err)
+			log.Printf("Failed to close ZIP writer: %v", err)
 		}
 	}(zipWriter)
 
-	// 添加公钥文件到ZIP
+	// Add public key file to ZIP
 	if err := addFileToZip(zipWriter, config.GetConfig().DataDir+"/.license_encryption_key.pub", "license/.license_encryption_key.pub"); err != nil {
 		return err
 	}
 
-	// 添加加密的许可证数据到ZIP
+	// Add encrypted license data to ZIP
 	if err := addLicenseToZip(zipWriter, encryptedLicense, "license/license.gitlab-license"); err != nil {
 		return err
 	}
@@ -225,7 +225,7 @@ func exportZipStream(ctx *gin.Context, encryptedLicense string) error {
 	return nil
 }
 
-// addFileToZip 从文件系统读取文件并添加到ZIP
+// addFileToZip reads a file from the filesystem and adds it to the ZIP
 func addFileToZip(zipWriter *zip.Writer, filePath, zipPath string) error {
 	fileToZip, err := os.Open(filePath)
 	if err != nil {
@@ -234,25 +234,25 @@ func addFileToZip(zipWriter *zip.Writer, filePath, zipPath string) error {
 	defer func(fileToZip *os.File) {
 		err := fileToZip.Close()
 		if err != nil {
-			log.Printf("关闭文件失败: %v", err)
+			log.Printf("Failed to close file: %v", err)
 		}
 	}(fileToZip)
 
-	// 获取文件信息，用于设置ZIP条目的大小和时间戳
+	// Get file info for setting the ZIP entry's size and timestamp
 	fileInfo, err := fileToZip.Stat()
 	if err != nil {
 		return err
 	}
 
-	// 创建ZIP条目，并手动设置文件时间戳
+	// Create ZIP entry and manually set file timestamp
 	header, err := zip.FileInfoHeader(fileInfo)
 	if err != nil {
 		return err
 	}
 	header.Name = zipPath
-	// 设置压缩方法
+	// Set compression method
 	header.Method = zip.Deflate
-	// 保留原文件的修改时间
+	// Preserve original file's modification time
 	header.Modified = fileInfo.ModTime()
 
 	zipFile, err := zipWriter.CreateHeader(header)
@@ -260,27 +260,27 @@ func addFileToZip(zipWriter *zip.Writer, filePath, zipPath string) error {
 		return err
 	}
 
-	// 写入文件数据到ZIP
+	// Write file data to ZIP
 	_, err = io.Copy(zipFile, fileToZip)
 	return err
 }
 
-// addLicenseToZip 直接将字符串数据写入ZIP条目
+// addLicenseToZip directly writes string data to a ZIP entry
 func addLicenseToZip(zipWriter *zip.Writer, data, zipPath string) error {
-	// 创建一个新的zip.FileHeader，设置文件名和修改时间
+	// Create a new zip.FileHeader, set filename and modification time
 	header := &zip.FileHeader{
 		Name:     zipPath,
-		Method:   zip.Deflate, // 使用压缩以减小文件大小
-		Modified: time.Now(),  // 设置当前时间作为文件修改时间
+		Method:   zip.Deflate, // Use compression to reduce file size
+		Modified: time.Now(),  // Set current time as file modification time
 	}
 
-	// 创建ZIP条目
+	// Create ZIP entry
 	zipFile, err := zipWriter.CreateHeader(header)
 	if err != nil {
 		return err
 	}
 
-	// 将数据写入ZIP条目
+	// Write data to ZIP entry
 	_, err = zipFile.Write([]byte(data))
 	return err
 }

@@ -19,7 +19,7 @@ type JrebelRpcService struct {
 	PrivateKey *rsa.PrivateKey
 }
 
-// 确保Service实现了common.RpcService接口
+// Ensure Service implements the common.RpcService interface
 var _ service.RpcService = &JrebelRpcService{}
 
 // privateKeyStr contains the RSA private key as a string.

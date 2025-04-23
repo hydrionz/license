@@ -14,20 +14,20 @@ func (ct CustomTime) MarshalJSON() ([]byte, error) {
 	return []byte(formatted), nil
 }
 
-// Restriction 结构体对应于Java中的Restriction类，用于存储限制信息
+// Restriction struct corresponds to the Restriction class in Java, used to store restriction information
 type Restriction struct {
-	Plan            string `json:"plan"`              // 默认Go的JSON序列化将使用字段名作为JSON键名
-	ActiveUserCount int    `json:"active_user_count"` // 使用JsonProperty标签映射JSON字段
+	Plan            string `json:"plan"`              // Default Go JSON serialization will use field name as JSON key
+	ActiveUserCount int    `json:"active_user_count"` // Using JsonProperty tag to map JSON field
 }
 
-// LicenseInfo 结构对应于Java中的LicenseInfo类，用于存储许可证信息
+// LicenseInfo struct corresponds to the LicenseInfo class in Java, used to store license information
 type LicenseInfo struct {
 	Name    string `json:"Name"`
 	Company string `json:"Company"`
 	Email   string `json:"Email"`
 }
 
-// License 代表一个许可证，对应于Java中的License类
+// License represents a license, corresponding to the License class in Java
 type License struct {
 	Version                      int         `json:"version"`
 	License                      LicenseInfo `json:"licensee"`

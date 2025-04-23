@@ -6,16 +6,16 @@ import (
 	"license/gitlab/service"
 )
 
-// Controller 定义控制器结构体
+// Controller defines the controller structure
 type Controller struct {
 }
 
-// NewController 创建新的控制器实例
+// NewController creates a new controller instance
 func NewController() *Controller {
 	return &Controller{}
 }
 
-// Generate 生成license的处理函数
+// Generate handles license generation
 func (controller *Controller) Generate(ctx *gin.Context) {
 
 	Name := ctx.PostForm("Name")
@@ -26,8 +26,8 @@ func (controller *Controller) Generate(ctx *gin.Context) {
 		Email:   Email,
 		Company: Company,
 	}
-	// 过期时间
+	// Expiration time
 	expireTime := ctx.PostForm("ExpireTime")
-	// 生成license
+	// Generate license
 	service.Generate(ctx, license, expireTime)
 }

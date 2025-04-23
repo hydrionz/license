@@ -19,16 +19,16 @@ func InitCert() {
 	initFile(config.GetConfig().DataDir+"/jetbrainsServerCACert.pem", jetbrainsServerCa)
 }
 
-// initFile 初始化文件
+// initFile initializes the file
 func initFile(filePath, content string) {
-	// 判断文件是否存在
+	// Check if file exists
 	if _, err := os.Stat(filePath); os.IsNotExist(err) {
-		// 文件不存在，写入字符串到文件
+		// File doesn't exist, write string to file
 		err = os.WriteFile(filePath, []byte(content), 0644)
 		if err != nil {
-			logger.Error("写入文件失败: %v", err)
+			logger.Error("Failed to write file: %v", err)
 		} else {
-			logger.Info(fmt.Sprintf("文件写入成功, %s", filePath))
+			logger.Info(fmt.Sprintf("File written successfully, %s", filePath))
 		}
 	}
 }

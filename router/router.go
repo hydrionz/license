@@ -12,7 +12,7 @@ import (
 	"strings"
 )
 
-// API路径前缀列表
+// List of API path prefixes
 var apiPrefixes = []string{
 	"/server/",
 	"/final-shell/",
@@ -24,7 +24,7 @@ var apiPrefixes = []string{
 	"/jetbrains/",
 }
 
-// IsAPIPath 判断给定路径是否为API路径
+// IsAPIPath determines if the given path is an API path
 func IsAPIPath(path string) bool {
 	for _, prefix := range apiPrefixes {
 		if strings.HasPrefix(path, prefix) {
@@ -34,16 +34,16 @@ func IsAPIPath(path string) bool {
 	return false
 }
 
-// HandleAPIRequest 处理API请求
+// HandleAPIRequest handles API requests
 func HandleAPIRequest(c *gin.Context) {
-	// 创建临时路由引擎处理请求
+	// Create a temporary routing engine to handle the request
 	tmpEngine := gin.New()
 	tmpGroup := tmpEngine.Group("/")
 
-	// 设置路由
+	// Set up the router
 	SetupRouter(tmpGroup)
 
-	// 处理请求
+	// Handle the request
 	tmpEngine.HandleContext(c)
 }
 

@@ -7,20 +7,20 @@ import (
 	"strings"
 )
 
-// Controller 定义控制器结构体
+// Controller defines the controller structure
 type Controller struct {
 }
 
-// NewController 创建新的控制器实例
+// NewController creates a new controller instance
 func NewController() *Controller {
 	return &Controller{}
 }
 
-// GenerateLicense 生成license的处理函数
+// GenerateLicense generates a license handling function
 func (controller *Controller) GenerateLicense(c *gin.Context) {
 	machineCode := c.PostForm("machineCode")
 	if strings.TrimSpace(machineCode) == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "machineCode不能为空"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Machine code cannot be empty"})
 		return
 	}
 	licenses := service.GenerateLicense(machineCode)

@@ -20,12 +20,23 @@ func keccak384Hash(msg string) string {
 	return str[12:28]
 }
 
-// GenerateLicense 实现接口的方法
+// GenerateLicense generates license codes for different FinalShell versions and editions
+// Returns an array of license codes in the following order:
+// [0] - License for Version < 3.9.6 Advanced Edition
+// [1] - License for Version < 3.9.6 Professional Edition
+// [2] - License for Version >= 3.9.6 Advanced Edition
+// [3] - License for Version >= 3.9.6 Professional Edition
+// Note: Version prefixes are no longer included in the returned strings.
+// Frontend must handle the display of version information.
 func GenerateLicense(machineCode string) []string {
 	var result []string
-	result = append(result, "版本号 < 3.9.6 高级版: "+md5Hash("61305"+machineCode+"8552"))
-	result = append(result, "版本号 < 3.9.6 专业版: "+md5Hash("2356"+machineCode+"13593"))
-	result = append(result, "版本号 >= 3.9.6 高级版: "+keccak384Hash(machineCode+"hSf(78cvVlS5E"))
-	result = append(result, "版本号 >= 3.9.6 专业版: "+keccak384Hash(machineCode+"FF3Go(*Xvbb5s2"))
+	// License for Version < 3.9.6 Advanced Edition
+	result = append(result, md5Hash("61305"+machineCode+"8552"))
+	// License for Version < 3.9.6 Professional Edition
+	result = append(result, md5Hash("2356"+machineCode+"13593"))
+	// License for Version >= 3.9.6 Advanced Edition
+	result = append(result, keccak384Hash(machineCode+"hSf(78cvVlS5E"))
+	// License for Version >= 3.9.6 Professional Edition
+	result = append(result, keccak384Hash(machineCode+"FF3Go(*Xvbb5s2"))
 	return result
 }

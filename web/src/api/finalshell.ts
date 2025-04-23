@@ -2,14 +2,19 @@ import api from './config';
 import axios from 'axios';
 
 /**
- * 生成FinalShell许可证
- * @param machineCode 机器码
+ * Generate FinalShell license
+ * @param machineCode Machine code
+ * @returns An array of license codes in order: 
+ *   [0] - Version < 3.9.6 Advanced Edition 
+ *   [1] - Version < 3.9.6 Professional Edition
+ *   [2] - Version >= 3.9.6 Advanced Edition
+ *   [3] - Version >= 3.9.6 Professional Edition
  */
 export const generateLicense = async (machineCode: string): Promise<string[]> => {
   const formData = new FormData();
   formData.append('machineCode', machineCode);
   
-  // 直接使用 axios 发送请求，确保正确传递 FormData
+  // Use axios directly to ensure FormData is correctly transmitted
   const response = await axios.post('/api/final-shell/generateLicense', formData);
   return response.data;
 }; 

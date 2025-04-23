@@ -18,7 +18,7 @@ func NewRpcController() *RpcController {
 	}
 }
 
-// Ping 处理 /rpc/ping.action 请求
+// Ping handles the /rpc/ping.action request
 func (c *RpcController) Ping(ctx *gin.Context) {
 	machineId := ctx.DefaultQuery("machineId", "")
 	salt := ctx.Query("salt")
@@ -32,7 +32,7 @@ func (c *RpcController) Ping(ctx *gin.Context) {
 
 }
 
-// ObtainTicket 处理 /rpc/obtainTicket.action 请求
+// ObtainTicket handles the /rpc/obtainTicket.action request
 func (c *RpcController) ObtainTicket(ctx *gin.Context) {
 	username := ctx.DefaultQuery("userName", "")
 	if len(username) == 0 {
@@ -50,7 +50,7 @@ func (c *RpcController) ObtainTicket(ctx *gin.Context) {
 	}
 }
 
-// ReleaseTicket 处理 /rpc/releaseTicket.action 请求
+// ReleaseTicket handles the /rpc/releaseTicket.action request
 func (c *RpcController) ReleaseTicket(ctx *gin.Context) {
 	machineId := ctx.DefaultQuery("machineId", "")
 	salt := ctx.Query("salt")

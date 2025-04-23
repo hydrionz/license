@@ -27,7 +27,7 @@ func SetupDatabase() {
 		}
 	}
 
-	// 自动迁移数据库模式
+	// Auto-migrate database schema
 	err = DB.AutoMigrate(&entity.PluginEntity{}, &entity.ProductEntity{})
 	if err != nil {
 		logger.Error("Failed to migrate database", err)

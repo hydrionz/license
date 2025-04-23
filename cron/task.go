@@ -11,7 +11,7 @@ func InitCron() {
 
 	jetbrainsTask := task.NewTask()
 
-	// 添加定时任务
+	// Add scheduled task
 	_, err := c.AddFunc("0 0 1 * * ?", func() {
 		jetbrainsTask.FetchProductLatest()
 	})

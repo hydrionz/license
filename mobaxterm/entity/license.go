@@ -4,7 +4,7 @@ import (
 	"fmt"
 )
 
-// License 定义了许可证的详细信息
+// License defines the detailed information for a license
 type License struct {
 	LicenseType  LicenseEnum
 	UserName     string
@@ -16,7 +16,7 @@ type License struct {
 	OpenPlugins  bool
 }
 
-// NewLicense 创建一个新的License实例
+// NewLicense creates a new License instance
 func NewLicense(licenseType LicenseEnum, userName string, majorVersion, minorVersion, count int, openGames, openPlugins bool) *License {
 	return &License{
 		LicenseType:  licenseType,
@@ -24,13 +24,13 @@ func NewLicense(licenseType LicenseEnum, userName string, majorVersion, minorVer
 		MajorVersion: majorVersion,
 		MinorVersion: minorVersion,
 		Count:        count,
-		Unknown:      0, // 默认值
+		Unknown:      0, // Default value
 		OpenGames:    openGames,
 		OpenPlugins:  openPlugins,
 	}
 }
 
-// GetLicenseKey 生成待计算的key的字符串
+// GetLicenseKey generates the string for the key to be calculated
 func (l *License) GetLicenseKey() string {
 	game := 0
 	if l.OpenGames {
@@ -40,7 +40,7 @@ func (l *License) GetLicenseKey() string {
 	if l.OpenPlugins {
 		plugin = 1
 	}
-	// 使用同样的字符串格式，需要匹配Java中的格式
+	// Use the same string format that matches the format in Java
 	licenseFormat := "%d#%s|%d%d#%d#%d3%d6%d#%d#%d#%d#"
 	return fmt.Sprintf(licenseFormat, l.LicenseType.GetCode(), l.UserName, l.MajorVersion, l.MinorVersion, l.Count, l.MajorVersion, l.MinorVersion, l.MinorVersion, l.Unknown, game, plugin)
 }

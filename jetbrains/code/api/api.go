@@ -8,16 +8,16 @@ import (
 	"strings"
 )
 
-// Controller 定义控制器结构体
+// Controller defines the controller structure
 type Controller struct {
 }
 
-// NewController 创建新的控制器实例
+// NewController creates a new controller instance
 func NewController() *Controller {
 	return &Controller{}
 }
 
-// FetchProduceLatest 用于获取最新的激活码
+// FetchProduceLatest fetches the latest activation codes
 func (controller *Controller) FetchProduceLatest(c *gin.Context) {
 	go func() {
 		productService := service.NewProductService()
@@ -33,7 +33,7 @@ func (controller *Controller) FetchProduceLatest(c *gin.Context) {
 	})
 }
 
-// FetchPluginLatest 用于获取最新的插件
+// FetchPluginLatest fetches the latest plugins
 func (controller *Controller) FetchPluginLatest(c *gin.Context) {
 	go func() {
 		pluginService := service.NewPluginService()
@@ -49,28 +49,28 @@ func (controller *Controller) FetchPluginLatest(c *gin.Context) {
 	})
 }
 
-// Generate 用于生成激活码
+// Generate generates activation codes
 func (controller *Controller) Generate(c *gin.Context) {
 	licenseeName := c.Query("licenseeName")
 	effectiveDate := c.Query("effectiveDate")
 	codes := c.Query("codes")
 
-	// 将字符串分割成数组
+	// Split string into array
 	var codesArray []string
 	if len(codes) > 0 {
 		codesArray = strings.Split(codes, ",")
 	}
 
-	// 生成license
+	// Generate license
 	activationCode, err := service.GenerateLicense(licenseeName, effectiveDate, codesArray)
 	if err != nil {
 		logger.Error("Failed to generate license:", err)
 		c.String(500, "Failed to generate license")
 	}
-	// 生成powerConf
+	// Generate powerConf
 	powerConfRule := util.GeneratePowerResult(util.Fake.CodeCert, util.Fake.CodeRootCert)
 
-	// 组装数据
+	// Assemble data
 	var result strings.Builder
 	result.WriteString("================== power.conf ==================")
 	result.WriteString("\n[Result]")

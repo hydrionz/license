@@ -85,19 +85,27 @@ const FinalShell: React.FC = () => {
   const [copying, setCopying] = useState<{[key: string]: boolean}>({});
   const [form] = Form.useForm();
 
+  // Version labels in order matching the backend response
+  const versionLabels = [
+    'finalshell.versions.advancedBelow396',
+    'finalshell.versions.proBelow396',
+    'finalshell.versions.advancedAbove396',
+    'finalshell.versions.proAbove396'
+  ];
+
   const handleGenerateLicense = async (values: { machineCode: string }) => {
     setLoading(true);
     try {
       const data = await finalshell.generateLicense(values.machineCode);
       setAuthorizationCodes(data);
     } catch (error) {
-      console.error('生成许可证失败:', error);
+      console.error('Generate license failed:', error);
     } finally {
       setLoading(false);
     }
   };
 
-  // 复制到剪贴板
+  // Copy to clipboard
   const copyToClipboard = (key: string, text: string) => {
     navigator.clipboard.writeText(text).then(() => {
       setCopying({ ...copying, [key]: true });
@@ -118,29 +126,6 @@ const FinalShell: React.FC = () => {
       breadcrumbName: t('nav.finalshell'),
     },
   ];
-
-  // 解析授权码字符串
-  const parseAuthCode = (codeWithLabel: string): { label: string, code: string } => {
-    const matches = codeWithLabel.match(/(.*?):\s*(.*)/);
-    if (matches && matches.length > 2) {
-      return { label: matches[1], code: matches[2] };
-    }
-    return { label: '', code: codeWithLabel };
-  };
-
-  // 获取翻译的版本标签
-  const getVersionLabel = (label: string): string => {
-    if (label.includes('< 3.9.6') && label.includes('高级版')) {
-      return t('finalshell.versions.advancedBelow396');
-    } else if (label.includes('< 3.9.6') && label.includes('专业版')) {
-      return t('finalshell.versions.proBelow396');
-    } else if (label.includes('>= 3.9.6') && label.includes('高级版')) {
-      return t('finalshell.versions.advancedAbove396');
-    } else if (label.includes('>= 3.9.6') && label.includes('专业版')) {
-      return t('finalshell.versions.proAbove396');
-    }
-    return label;
-  };
 
   return (
     <div>
@@ -182,14 +167,13 @@ const FinalShell: React.FC = () => {
 
       {authorizationCodes.length > 0 && (
         <FormCard title={t('finalshell.registrationSuccess')}>
-          {authorizationCodes.map((codeWithLabel, index) => {
-            const { label, code } = parseAuthCode(codeWithLabel);
-            const versionLabel = getVersionLabel(label);
+          {authorizationCodes.map((code, index) => {
+            const versionLabelKey = versionLabels[index] || '';
             const copyKey = `code-${index}`;
 
             return (
               <div key={index} style={{marginBottom: 16}}>
-                <CodeLabel>{versionLabel}</CodeLabel>
+                <CodeLabel>{t(versionLabelKey)}</CodeLabel>
                 <AuthorizationCodeContainer>
                   {code}
                   <CopyButton

@@ -27,7 +27,7 @@ export const fetchVersions = async (): Promise<string[]> => {
     const response = await api.get('/mobaxterm/versions');
     console.log('API response:', response);
     
-    // 后端直接返回数组
+    // Backend directly returns an array
     if (Array.isArray(response)) {
       console.log('Got array response directly:', response);
       return response;

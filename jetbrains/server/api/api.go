@@ -6,21 +6,21 @@ import (
 	"strings"
 )
 
-// LicenseServerController 定义控制器结构体
+// LicenseServerController defines the controller structure
 type LicenseServerController struct {
 }
 
-// NewLicenseServerController 创建新的控制器实例
+// NewLicenseServerController creates a new controller instance
 func NewLicenseServerController() *LicenseServerController {
 	return &LicenseServerController{}
 }
 
-// LicenseServerRule 生成license的处理函数
+// LicenseServerRule generates a license handling function
 func (controller *LicenseServerController) LicenseServerRule(c *gin.Context) {
 	codePower := util.GeneratePowerResult(util.Fake.CodeCert, util.Fake.CodeRootCert)
 	serverPower := util.GeneratePowerResult(util.Fake.ServerCert, util.Fake.ServerRootCert)
 
-	// 构造返回结果
+	// Construct the result
 	var result strings.Builder
 	result.WriteString("[Result]\n; Lemon active by code\n")
 	result.WriteString(codePower)

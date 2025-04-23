@@ -1,10 +1,10 @@
 package initialize
 
 func ExecuteInitialize() {
-	// 初始化证书
+	// Initialize certificates
 	InitCert()
-	// 初始化gitlab
+	// Initialize GitLab
 	InitGitLabCert()
-	// 初始化 Jetbrains
+	// Initialize JetBrains
 	InitJetbrains()
 }

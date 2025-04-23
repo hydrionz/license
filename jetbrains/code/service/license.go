@@ -19,15 +19,15 @@ var productCodes = []string{"II", "PS", "AC", "DB", "RM", "WS", "RD", "CL", "PC"
 func GenerateLicense(licenseeName, effectiveDate string, codes []string) (string, error) {
 
 	if effectiveDate == "" {
-		// 获取当前时间
+		// Get current time
 		now := time.Now()
 
-		// 当天的23:59:59
+		// Today at 23:59:59
 		endOfToday := time.Date(now.Year(), now.Month(), now.Day(), 23, 59, 59, 0, now.Location())
 
-		// 三年后的同一天
+		// Same day three years later
 		threeYearsLater := endOfToday.AddDate(3, 0, 0)
-		// 格式化日期
+		// Format date
 		effectiveDate = threeYearsLater.Format("2006-01-02 15:04:05")
 	}
 
@@ -97,7 +97,7 @@ func GenerateLicense(licenseeName, effectiveDate string, codes []string) (string
 }
 
 func signWithRSA(privateKey *rsa.PrivateKey, data []byte) string {
-	// 对数据进行SHA1哈希
+	// Hash the data with SHA1
 	hash := sha1.New()
 	_, err := hash.Write(data)
 	if err != nil {
@@ -114,20 +114,20 @@ func signWithRSA(privateKey *rsa.PrivateKey, data []byte) string {
 	return signature
 }
 
-// randomString 生成长度为 n 的随机字符串，包含大写字母和数字
+// randomString generates a random string of length n, containing uppercase letters and numbers
 func randomString(n int) (string, error) {
 	const charset = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
-	byteArray := make([]byte, n) // 创建一个长度为 n 的字节切片
+	byteArray := make([]byte, n) // Create a byte slice of length n
 
-	// 读取随机字节填充byteArray
+	// Read random bytes to fill byteArray
 	if _, err := rand.Read(byteArray); err != nil {
-		return "", err // 返回错误信息
+		return "", err // Return error message
 	}
 
-	// 将每个字节映射到 charset 中，保证它是大写字母或数字
+	// Map each byte to a character in charset, ensuring it's an uppercase letter or number
 	for i, b := range byteArray {
-		byteArray[i] = charset[b%byte(len(charset))] // 使用模运算将字节转换为charset中的字符
+		byteArray[i] = charset[b%byte(len(charset))] // Use modulo to convert byte to a character in charset
 	}
 
-	return string(byteArray), nil // 转换为字符串并返回
+	return string(byteArray), nil // Convert to string and return
 }

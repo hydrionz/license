@@ -5,7 +5,7 @@ import (
 	"license/logger"
 )
 
-// InitJetbrains 初始化
+// InitJetbrains initialize JetBrains components
 func InitJetbrains() {
 	logger.Info("init fake cert")
 	util.Fake.LoadOrGenerate()

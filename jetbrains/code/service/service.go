@@ -56,9 +56,9 @@ func (service *ProductServiceImpl) FetchLatest() error {
 
 	productList := make([]*entity.ProductEntity, 0, len(products))
 	for i, product := range products {
-		logger.Info(fmt.Sprintf("待处理产品总数:%d,当前正在处理第:%d个", len(products), i+1))
+		logger.Info(fmt.Sprintf("Total products to process: %d, currently processing #%d", len(products), i+1))
 
-		// 将 product map 转换为 JSON 字符串
+		// Convert product map to JSON string
 		productJSON, err := json.Marshal(product)
 		if err != nil {
 			logger.Error("Error marshaling product to JSON:", err)
@@ -150,7 +150,7 @@ func (s *PluginServiceImpl) fetchPlugins(url string) ([]*entity.PluginEntity, er
 
 	plugins := make([]*entity.PluginEntity, 0, len(data.Plugins))
 	for index, p := range data.Plugins {
-		logger.Info(fmt.Sprintf("待处理插件总数:%d,当前正在处理第:%d个,插件Id:%d", len(data.Plugins), index+1, p.ID))
+		logger.Info(fmt.Sprintf("Total plugins to process: %d, currently processing #%d, Plugin ID: %d", len(data.Plugins), index+1, p.ID))
 		detailResp, err := client.Get(fmt.Sprintf("%s%d", pluginDetailURL, p.ID))
 		if err != nil {
 			logger.Error(fmt.Sprintf("Error fetching plugin detail for ID %d", p.ID), err)
@@ -197,24 +197,24 @@ func (s *PluginServiceImpl) fetchPlugins(url string) ([]*entity.PluginEntity, er
 }
 
 func (s *PluginServiceImpl) FetchLatest() error {
-	// 首先获取付费插件
+	// First fetch paid plugins
 	paidPlugins, err := s.fetchPlugins(paidPluginsURL)
 	if err != nil {
 		logger.Error("Error fetching paid plugins:", err)
 		return err
 	}
 
-	// 接着获取免费增值插件
+	// Then fetch freemium plugins
 	freemiumPlugins, err := s.fetchPlugins(freemiumPluginsURL)
 	if err != nil {
 		logger.Error("Error fetching freemium plugins:", err)
 		return err
 	}
 
-	// 合并两次结果
+	// Merge the two results
 	allPlugins := append(paidPlugins, freemiumPlugins...)
 
-	// 如果获取到的插件列表不为空，则清空表并批量插入
+	// If the plugin list is not empty, clear the table and batch insert
 	if len(allPlugins) > 0 {
 		if err := s.Mapper.Truncate(); err != nil {
 			logger.Error("Error truncating plugin table:", err)

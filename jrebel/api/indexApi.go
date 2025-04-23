@@ -15,11 +15,11 @@ const (
 	endStr      = "/"
 )
 
-// IndexController 定义控制器结构体
+// IndexController defines the controller structure
 type IndexController struct {
 }
 
-// NewIndexController 创建新的控制器实例
+// NewIndexController creates a new controller instance
 func NewIndexController() *IndexController {
 	return &IndexController{}
 }
@@ -53,7 +53,7 @@ func (controller *IndexController) IndexHandler(c *gin.Context) {
 	}
 
 	html := fmt.Sprintf(`
-		<h3>使用说明（Instructions for use）</h3>
+		<h3>Instructions for use</h3>
 		<hr/>
 		<h1>Hello, This is a Jrebel & JetBrains License Server!</h1>
 		<p>License Server started at %s</p>
@@ -61,11 +61,11 @@ func (controller *IndexController) IndexHandler(c *gin.Context) {
 		<p>JRebel 7.1 and earlier version Activation address was: <span style='color:red'>%s/{tokenname}</span>, with any email.</p>
 		<p>JRebel 2018.1 and later version Activation address was: %s/{guid} (eg:<span style='color:red'>%s/%s</span>), with any email.</p>
 		<hr/>
-		<h1>Hello，此地址是 Jrebel & JetBrains License Server!</h1>
-		<p>JetBrains许可服务器激活地址 %s</p>
-		<p>JetBrains激活地址是: <span style='color:red'>%s</span></p>
-		<p>JRebel 7.1 及旧版本激活地址: <span style='color:red'>%s/{tokenname}</span>, 以及任意邮箱地址。</p>
-		<p>JRebel 2018.1+ 版本激活地址: %s/{guid} (例如：<span style='color:red'>%s/%s</span>), 以及任意邮箱地址。</p>
+		<h1>Hello, this is a Jrebel & JetBrains License Server!</h1>
+		<p>JetBrains license server activation address %s</p>
+		<p>JetBrains activation address is: <span style='color:red'>%s</span></p>
+		<p>JRebel 7.1 and older versions activation address: <span style='color:red'>%s/{tokenname}</span>, with any email address.</p>
+		<p>JRebel 2018.1+ version activation address: %s/{guid} (example: <span style='color:red'>%s/%s</span>), with any email address.</p>
 	`, licenseURL, licenseURL, licenseURL, licenseURL, licenseURL, c.Query("guid"), licenseURL, licenseURL, licenseURL, licenseURL, licenseURL, c.Query("guid"))
 
 	c.Header("Content-Type", "text/html; charset=utf-8")

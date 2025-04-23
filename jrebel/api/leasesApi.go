@@ -17,11 +17,11 @@ import (
 	"strconv"
 )
 
-// LeasesController 定义控制器结构体
+// LeasesController defines the controller structure
 type LeasesController struct {
 }
 
-// NewLeasesController 创建新的控制器实例
+// NewLeasesController creates a new controller instance
 func NewLeasesController() *LeasesController {
 	return &LeasesController{}
 }
@@ -71,7 +71,7 @@ func (controller *LeasesController) LeasesHandler(c *gin.Context) {
 
 	var validFrom, validUntil int64
 	if offline {
-		// 计算180天后的时间，注意这里是以毫秒为单位
+		// Calculate time after 180 days, note that the unit is milliseconds
 		expiration := clientTime + 180*24*60*60*1000
 		validFrom = clientTime
 		validUntil = expiration
@@ -115,7 +115,7 @@ func (controller *LeasesController) Leases1Handler(c *gin.Context) {
 
 	var validFrom, validUntil int64
 	if offline {
-		// 计算180天后的时间，注意这里是以毫秒为单位
+		// Calculate time after 180 days, note that the unit is milliseconds
 		expiration := clientTime + 180*24*60*60*1000
 		validFrom = clientTime
 		validUntil = expiration
@@ -150,7 +150,7 @@ func (controller *LeasesController) ValidateHandler(c *gin.Context) {
 
 	var validFrom, validUntil int64
 	if offline {
-		// 计算180天后的时间，注意这里是以毫秒为单位
+		// Calculate time after 180 days, note that the unit is milliseconds
 		expiration := clientTime + 180*24*60*60*1000
 		validFrom = clientTime
 		validUntil = expiration

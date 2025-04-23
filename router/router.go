@@ -19,19 +19,19 @@ import (
 	"time"
 )
 
-// VersionResponse 定义版本响应结构
+// VersionResponse defines the version response structure
 type VersionResponse struct {
 	Version       string `json:"version"`
 	NeedUpdate    bool   `json:"needUpdate"`
 	LatestVersion string `json:"latestVersion,omitempty"`
 }
 
-// GitHubRelease GitHub API 版本发布响应结构
+// GitHubRelease GitHub API release response structure
 type GitHubRelease struct {
 	TagName string `json:"tag_name"`
 }
 
-// 缓存GitHub最新版本的信息
+// Cache for GitHub latest version information
 var (
 	cachedLatestVersion string
 	lastFetchTime       time.Time
@@ -73,9 +73,9 @@ func HandleAPIRequest(c *gin.Context) {
 	tmpEngine.HandleContext(c)
 }
 
-// 获取GitHub最新版本号（移除v前缀）
+// getLatestVersionFromGitHub fetches the latest version from GitHub(removing the "v" prefix)
 func getLatestVersionFromGitHub() string {
-	// 如果缓存尚未过期，则使用缓存的值
+	// If the cache has not expired, use the cached value
 	if !lastFetchTime.IsZero() && time.Since(lastFetchTime) < cacheExpiration && cachedLatestVersion != "" {
 		return cachedLatestVersion
 	}
@@ -86,67 +86,67 @@ func getLatestVersionFromGitHub() string {
 
 	req, err := http.NewRequest("GET", "https://api.github.com/repos/nannanStrawberry314/license/releases/latest", nil)
 	if err != nil {
-		logger.Error("创建GitHub API请求失败", err)
+		logger.Error("Failed to create GitHub API request", err)
 		return ""
 	}
 
-	// 使用随机UA
+	// Use random User-Agent
 	req.Header.Set("User-Agent", useragent.GetRandom())
 	req.Header.Set("Accept", "application/vnd.github.v3+json")
 
 	resp, err := client.Do(req)
 	if err != nil {
-		logger.Error("请求GitHub API失败", err)
+		logger.Error("Failed to request GitHub API", err)
 		return ""
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		logger.Error("GitHub API返回非200状态码", nil)
+		logger.Error("GitHub API returned non-200 status code", nil)
 		return ""
 	}
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		logger.Error("读取GitHub API响应失败", err)
+		logger.Error("Failed to read GitHub API response", err)
 		return ""
 	}
 
 	var release GitHubRelease
 	if err := json.Unmarshal(body, &release); err != nil {
-		logger.Error("解析GitHub API响应失败", err)
+		logger.Error("Failed to parse GitHub API response", err)
 		return ""
 	}
 
-	// 去掉版本号前的"v"
+	// Remove "v" prefix from version number
 	version := release.TagName
 	if strings.HasPrefix(version, "v") {
 		version = version[1:]
 	}
 
-	// 更新缓存
+	// Update cache
 	cachedLatestVersion = version
 	lastFetchTime = time.Now()
 
 	return version
 }
 
-// 比较版本号大小
+// compareVersions compares version numbers
 func compareVersions(current, latest string) bool {
-	// 将两个版本按照点号分割
+	// Split both versions by dot
 	currentParts := strings.Split(current, ".")
 	latestParts := strings.Split(latest, ".")
 
-	// 逐个比较版本号的各个部分
+	// Compare each part of the version numbers
 	for i := 0; i < len(currentParts) && i < len(latestParts); i++ {
 		if currentParts[i] < latestParts[i] {
-			return true // 需要更新
+			return true // Update needed
 		} else if currentParts[i] > latestParts[i] {
-			return false // 不需要更新
+			return false // No update needed
 		}
 	}
 
-	// 如果前面的部分都相等，但是latest的部分更多，则需要更新
+	// If all previous parts are equal, but latest has more parts, update is needed
 	return len(latestParts) > len(currentParts)
 }
 

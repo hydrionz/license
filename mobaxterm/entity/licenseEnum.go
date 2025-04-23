@@ -4,7 +4,6 @@ package entity
 type LicenseEnum int
 
 const (
-	// Define different types of licenses
 	Professional LicenseEnum = iota + 1 // Professional Edition
 	Educational                         // Educational Edition
 	Personal                            // Personal Edition

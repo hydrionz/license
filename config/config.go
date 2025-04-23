@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-// Version 版本信息，可以在编译时通过 -ldflags="-X 'license/config.Version=x.y.z'" 注入
+// Version is the version information
 var Version = "0.0.1"
 
 type Config struct {

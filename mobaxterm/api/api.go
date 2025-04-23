@@ -21,18 +21,18 @@ func (ctrl *Controller) FetchVersions(c *gin.Context) {
 	versions, err := service.FetchVersions()
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
-			"status": "error",
+			"status":  "error",
 			"message": "Failed to fetch versions",
 			"details": err.Error(),
 		})
 		return
 	}
-	
+
 	// Simplified response structure - no nesting to avoid confusion
 	c.JSON(http.StatusOK, versions)
 }
 
-// generate handles the license generation process.
+// GenerateLicense generate handles the license generation process.
 func (ctrl *Controller) GenerateLicense(c *gin.Context) {
 	name := c.Query("name")
 	if name == "" {

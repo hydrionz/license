@@ -7,7 +7,7 @@ import (
 	"license/rpc/service"
 )
 
-// Service represents the JRebel RPC service.
+// JetbrainsRpcService Service represents the JRebel RPC service.
 type JetbrainsRpcService struct {
 }
 

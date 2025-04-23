@@ -28,7 +28,7 @@ func NewLeasesController() *LeasesController {
 
 // sign creates a digital signature using RSA-SHA1 algorithm.
 func sign(clientRandomness, guid string, offline bool, validFrom, validUntil int64) string {
-	signatureBase := clientRandomness + ";" + constant.SERVER_RANDOMNESS + ";" + guid + ";" + strconv.FormatBool(offline)
+	signatureBase := clientRandomness + ";" + constant.ServerRandomness + ";" + guid + ";" + strconv.FormatBool(offline)
 	if offline {
 		// signatureBase += ";" + strconv.FormatInt(*validFrom, 10) + ";" + strconv.FormatInt(*validUntil, 10)
 		signatureBase += ";" + strconv.FormatInt(validFrom, 10) + ";" + strconv.FormatInt(validUntil, 10)
@@ -36,7 +36,7 @@ func sign(clientRandomness, guid string, offline bool, validFrom, validUntil int
 
 	log.Printf("signature: %s", signatureBase)
 
-	block, _ := pem.Decode([]byte(constant.LEASES_PRIVATE_KEY))
+	block, _ := pem.Decode([]byte(constant.LeasesPrivateKey))
 	if block == nil {
 		log.Println("Failed to decode PEM block containing the private key")
 		return ""
@@ -80,17 +80,17 @@ func (controller *LeasesController) LeasesHandler(c *gin.Context) {
 	signature := sign(clientRandomness, guid, offline, validFrom, validUntil)
 
 	leasesHandlerVO := vo.LeasesHandlerVO{
-		ServerVersion:         constant.SERVER_VERSION,
-		ServerProtocolVersion: constant.SERVER_PROTOCOL_VERSION,
-		ServerGuid:            constant.SERVER_GUID,
-		GroupType:             constant.GROUP_TYPE,
+		ServerVersion:         constant.ServerVersion,
+		ServerProtocolVersion: constant.ServerProtocolVersion,
+		ServerGuid:            constant.ServerGuid,
+		GroupType:             constant.GroupType,
 		ID:                    1,
 		LicenseType:           1,
 		EvaluationLicense:     false,
 		Signature:             signature,
-		ServerRandomness:      constant.SERVER_RANDOMNESS,
-		SeatPoolType:          constant.SEAT_POOL_TYPE,
-		StatusCode:            constant.STATUS_CODE,
+		ServerRandomness:      constant.ServerRandomness,
+		SeatPoolType:          constant.SeatPoolType,
+		StatusCode:            constant.StatusCode,
 		Offline:               offline,
 		ValidFrom:             validFrom,
 		ValidUntil:            validUntil,
@@ -124,14 +124,14 @@ func (controller *LeasesController) Leases1Handler(c *gin.Context) {
 	signature := sign(clientRandomness, guid, offline, validFrom, validUntil)
 
 	leasesOneHandlerVO := vo.LeasesOneHandlerVO{
-		ServerVersion:         constant.SERVER_VERSION,
-		ServerProtocolVersion: constant.SERVER_PROTOCOL_VERSION,
-		ServerGuid:            constant.SERVER_GUID,
+		ServerVersion:         constant.ServerVersion,
+		ServerProtocolVersion: constant.ServerProtocolVersion,
+		ServerGuid:            constant.ServerGuid,
 		Signature:             signature,
-		ServerRandomness:      constant.SERVER_RANDOMNESS,
+		ServerRandomness:      constant.ServerRandomness,
 		Features:              "{}",
-		GroupType:             constant.GROUP_TYPE,
-		StatusCode:            constant.STATUS_CODE,
+		GroupType:             constant.GroupType,
+		StatusCode:            constant.StatusCode,
 		Company:               username,
 		Msg:                   "",
 		StatusMessage:         "",
@@ -159,19 +159,19 @@ func (controller *LeasesController) ValidateHandler(c *gin.Context) {
 	signature := sign(clientRandomness, guid, offline, validFrom, validUntil)
 
 	validateHandlerVO := vo.ValidateHandlerVO{
-		ServerVersion:         constant.SERVER_VERSION,
-		ServerProtocolVersion: constant.SERVER_PROTOCOL_VERSION,
-		ServerGuid:            constant.SERVER_GUID,
+		ServerVersion:         constant.ServerVersion,
+		ServerProtocolVersion: constant.ServerProtocolVersion,
+		ServerGuid:            constant.ServerGuid,
 		Signature:             signature,
-		ServerRandomness:      constant.SERVER_RANDOMNESS,
+		ServerRandomness:      constant.ServerRandomness,
 		Features:              "{}",
-		GroupType:             constant.GROUP_TYPE,
-		StatusCode:            constant.STATUS_CODE,
+		GroupType:             constant.GroupType,
+		StatusCode:            constant.StatusCode,
 		Company:               constant.COMPANY,
 		CanGetLease:           true,
 		LicenseType:           "1",
 		EvaluationLicense:     false,
-		SeatPoolType:          constant.SEAT_POOL_TYPE,
+		SeatPoolType:          constant.SeatPoolType,
 	}
 
 	c.JSON(http.StatusOK, validateHandlerVO)

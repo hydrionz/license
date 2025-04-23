@@ -27,7 +27,7 @@ const enUS = {
     description: 'One-stop solution for development tool authorization needs, supporting services for various common development tools',
     tools: {
       jetbrains: {
-        title: 'JetBrains Authorization Assistant',
+        title: 'JetBrains Authorization Service',
         description: 'Obtain authorization information for all JetBrains products, including IntelliJ IDEA, PyCharm, WebStorm, etc.'
       },
       gitlab: {
@@ -35,7 +35,7 @@ const enUS = {
         description: 'Create enterprise authorization for GitLab, unlocking all advanced features'
       },
       finalshell: {
-        title: 'FinalShell Authorization Assistant',
+        title: 'FinalShell Authorization Service',
         description: 'Obtain authorization information for FinalShell SSH tools'
       },
       mobaxterm: {

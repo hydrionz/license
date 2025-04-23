@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Typography, Form, Button, Input, Select, Alert, message, Card } from 'antd';
+import React, { useState, useEffect, useRef } from 'react';
+import { Typography, Form, Button, Input, Select, Alert, message, Card, Spin } from 'antd';
 import styled from 'styled-components';
 import { useTranslation } from 'react-i18next';
 import PageHeader from '../components/PageHeader';
@@ -48,37 +48,72 @@ const StepContent = styled.div`
   flex: 1;
 `;
 
-const versions = [
+// Fallback versions in case API fails
+const fallbackVersions = [
+  '25.1',
+  '25.0',
+  '24.4',
+  '24.3',
   '23.6',
   '23.5',
-  '23.4',
-  '23.3',
-  '23.2',
-  '23.1',
   '23.0',
   '22.3',
-  '22.2',
-  '22.1',
-  '22.0',
   '21.5',
-  '21.4',
-  '21.3',
-  '21.2',
-  '21.1',
   '21.0',
   '20.6',
-  '20.5',
-  '20.4',
-  '20.3',
-  '20.2',
-  '20.1',
   '20.0',
 ];
 
 const MobaXterm: React.FC = () => {
   const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
+  const [versions, setVersions] = useState<string[]>(fallbackVersions);
+  const [loadingVersions, setLoadingVersions] = useState(false);
+  const fetchedRef = useRef(false);
   const [form] = Form.useForm();
+
+  // Fetch versions from API when component mounts - with improved controls
+  useEffect(() => {
+    // Set initial form value with default version
+    form.setFieldsValue({ 
+      version: fallbackVersions[0],
+      username: "MobaXterm User",
+      count: "1000"
+    });
+
+    // Only fetch if we haven't already
+    if (fetchedRef.current) {
+      return;
+    }
+
+    const fetchVersionsFromApi = async () => {
+      // Prevent concurrent requests
+      fetchedRef.current = true;
+      setLoadingVersions(true);
+      
+      try {
+        console.log('Fetching versions...');
+        const fetchedVersions = await mobaxterm.fetchVersions();
+        console.log('Versions response:', fetchedVersions);
+        
+        if (fetchedVersions && fetchedVersions.length > 0) {
+          setVersions(fetchedVersions);
+          // Update form value
+          form.setFieldsValue({ version: fetchedVersions[0] });
+          console.log('Setting version to:', fetchedVersions[0]);
+        } else {
+          console.log('Using fallback versions');
+        }
+      } catch (error) {
+        console.error('Failed to fetch versions:', error);
+        // No need to show error message, just use fallbacks
+      } finally {
+        setLoadingVersions(false);
+      }
+    };
+
+    fetchVersionsFromApi();
+  }, [form, t]);
 
   const handleGenerateLicense = async (values: { 
     username: string; 
@@ -152,7 +187,6 @@ const MobaXterm: React.FC = () => {
             name="username"
             label={t('mobaxterm.form.username')}
             rules={[{ required: true, message: t('mobaxterm.form.usernamePlaceholder') }]}
-            initialValue="MobaXterm User"
           >
             <Input placeholder={t('mobaxterm.form.usernamePlaceholder')} />
           </Form.Item>
@@ -161,9 +195,12 @@ const MobaXterm: React.FC = () => {
             name="version"
             label={t('mobaxterm.form.version')}
             rules={[{ required: true, message: t('mobaxterm.form.versionPlaceholder') }]}
-            initialValue={versions[0]}
           >
-            <Select placeholder={t('mobaxterm.form.versionPlaceholder')}>
+            <Select 
+              placeholder={t('mobaxterm.form.versionPlaceholder')}
+              loading={loadingVersions}
+              notFoundContent={loadingVersions ? <Spin size="small" /> : null}
+            >
               {versions.map((version) => (
                 <Option key={version} value={version}>
                   {version}
@@ -176,7 +213,6 @@ const MobaXterm: React.FC = () => {
             name="count"
             label={t('mobaxterm.form.count')}
             rules={[{ required: true, message: t('mobaxterm.form.countPlaceholder') }]}
-            initialValue="1000"
           >
             <Input placeholder={t('mobaxterm.form.countPlaceholder')} />
           </Form.Item>

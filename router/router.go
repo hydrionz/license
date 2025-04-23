@@ -112,6 +112,15 @@ func SetupRouter(r *gin.RouterGroup) {
 	mobaxtermGroup := r.Group("/mobaxterm")
 	{
 		mobaxtermGroup.POST("/generate", mobaxtermApi.GenerateLicense)
+		mobaxtermGroup.GET("/versions", func(c *gin.Context) {
+			// Add no-cache headers
+			c.Header("Cache-Control", "no-cache, no-store, must-revalidate")
+			c.Header("Pragma", "no-cache")
+			c.Header("Expires", "0")
+			
+			mobaxtermApi.FetchVersions(c)
+		})
+		mobaxtermGroup.GET("/debug", mobaxtermApi.DebugHtmlStructure)
 	}
 
 	// jetbrains

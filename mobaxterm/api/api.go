@@ -16,6 +16,22 @@ func NewMobaXtermController() *Controller {
 	return &Controller{}
 }
 
+// FetchVersions retrieves the available MobaXterm versions from the official website.
+func (ctrl *Controller) FetchVersions(c *gin.Context) {
+	versions, err := service.FetchVersions()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"status": "error",
+			"message": "Failed to fetch versions",
+			"details": err.Error(),
+		})
+		return
+	}
+	
+	// Simplified response structure - no nesting to avoid confusion
+	c.JSON(http.StatusOK, versions)
+}
+
 // generate handles the license generation process.
 func (ctrl *Controller) GenerateLicense(c *gin.Context) {
 	name := c.Query("name")
@@ -37,4 +53,15 @@ func (ctrl *Controller) GenerateLicense(c *gin.Context) {
 		return
 	}
 	service.GenerateLicense(count, name, version, c)
+}
+
+// DebugHtmlStructure provides debugging information for the HTML structure.
+func (ctrl *Controller) DebugHtmlStructure(c *gin.Context) {
+	debugInfo, err := service.DebugHtmlStructure()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to debug HTML structure", "details": err.Error()})
+		return
+	}
+	
+	c.JSON(http.StatusOK, debugInfo)
 }

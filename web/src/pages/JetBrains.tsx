@@ -16,6 +16,7 @@ import PageHeader from '../components/PageHeader';
 import ResultCard from '../components/ResultCard';
 import { jetbrains } from '../api';
 import { JetBrainsLicense } from '../types';
+import { copyAndManageState } from '../utils/clipboard';
 
 const { Paragraph, Text, Title } = Typography;
 
@@ -222,24 +223,15 @@ const JetBrains: React.FC = () => {
   };
 
   const copyToClipboard = (key: string, text: string) => {
-    navigator.clipboard.writeText(text).then(() => {
-      setCopying({ ...copying, [key]: true });
-
-      notification.success({
-        message: t('common.copied'),
-        duration: 3,
-      });
-
-      setTimeout(() => {
-        setCopying({ ...copying, [key]: false });
-      }, 2000);
-    }).catch((error) => {
-      notification.error({
-        message: t('common.copyFail'),
-        duration: 3,
-      });
-      console.error('Copy failed:', error);
-    });
+    copyAndManageState(
+      key,
+      text,
+      copying,
+      setCopying,
+      notification,
+      t('common.copied'),
+      t('common.copyFail')
+    );
   };
 
   // Extract power.conf content from raw response

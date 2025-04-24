@@ -15,6 +15,7 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"time"
 )
 
 // LeasesController defines the controller structure
@@ -151,7 +152,7 @@ func (controller *LeasesController) ValidateHandler(c *gin.Context) {
 	var validFrom, validUntil int64
 	if offline {
 		// Calculate time after 180 days, note that the unit is milliseconds
-		expiration := clientTime + 180*24*60*60*1000
+		expiration := clientTime + 180*24*time.Hour.Milliseconds()
 		validFrom = clientTime
 		validUntil = expiration
 	}

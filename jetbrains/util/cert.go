@@ -118,7 +118,7 @@ type FakeCert struct {
 }
 
 func (c *FakeCert) LoadOrGenerate() {
-	// 确保路径已初始化
+	// ensure paths are initialized
 	if CodeRootCertPath == "" {
 		InitCertPaths()
 	}
@@ -169,7 +169,7 @@ func (c *FakeCert) LoadOrGenerate() {
 }
 
 func (c *FakeCert) LoadRootCert() (err error) {
-	// 确保路径已初始化
+	// ensure paths are initialized
 	if CodeRootCertPath == "" {
 		InitCertPaths()
 	}
@@ -186,7 +186,7 @@ func (c *FakeCert) LoadRootCert() (err error) {
 }
 
 func (c *FakeCert) LoadCert() (err error) {
-	// 确保路径已初始化
+	// ensure paths are initialized
 	if CodeRootCertPath == "" {
 		InitCertPaths()
 	}
@@ -212,7 +212,7 @@ func fileExists(filename string) bool {
 }
 
 func (c *FakeCert) GenerateRootCert() (err error) {
-	// 确保路径已初始化
+	// ensure paths are initialized
 	if CodeRootCertPath == "" {
 		InitCertPaths()
 	}

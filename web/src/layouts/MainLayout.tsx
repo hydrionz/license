@@ -60,7 +60,7 @@ const StyledHeader = styled(Header)`
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
   position: sticky;
   top: 0;
-  z-index: 1;
+  z-index: 10;
   backdrop-filter: blur(8px);
 `;
 

@@ -100,7 +100,7 @@ const LanguageSelector: React.FC = () => {
       value={currentLanguage}
       style={{ width: 100, maxWidth: '100%' }}
       onChange={handleChange}
-      dropdownStyle={{ zIndex: 1100 }}
+      dropdownStyle={{ zIndex: 10 }}
       popupMatchSelectWidth={false}
       options={[
         { value: 'zh-CN', label: getLanguageDisplay('zh-CN') },

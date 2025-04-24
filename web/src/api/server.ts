@@ -1,4 +1,4 @@
-import axios from 'axios';
+import api from "./config";
 
 interface ServerVersionResponse {
   version: string;
@@ -22,8 +22,8 @@ export interface VersionInfo {
  */
 export const getVersion = async (queryParam?: string): Promise<VersionInfo> => {
   try {
-    const url = `/api/server/version${queryParam || ''}`;
-    const response = await axios.get<ServerVersionResponse>(url, {
+    const url = `/server/version${queryParam || ''}`;
+    const response =  await api.get<ServerVersionResponse>(url, {
       headers: {
         'Cache-Control': 'no-cache, no-store',
         'Pragma': 'no-cache',
@@ -31,9 +31,9 @@ export const getVersion = async (queryParam?: string): Promise<VersionInfo> => {
       }
     });
     return {
-      version: response.data.version,
-      needUpdate: response.data.needUpdate,
-      latestVersion: response.data.latestVersion
+      version: response.version,
+      needUpdate: response.needUpdate,
+      latestVersion: response.latestVersion
     };
   } catch (error) {
     console.error('Failed to fetch server version:', error);

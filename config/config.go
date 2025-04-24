@@ -10,9 +10,6 @@ import (
 	"time"
 )
 
-// Version is the version information
-var Version = "0.0.1"
-
 type Config struct {
 	HttpHost       string
 	HttpPort       int
@@ -82,14 +79,26 @@ func getEnvBool(key string, defaultValue bool) bool {
 // GetConfig provides access to global configuration
 func GetConfig() *Config {
 	if globalConfig == nil {
+		// Check if running with -version flag
+		isVersionMode := false
+		for _, arg := range os.Args {
+			if arg == "-version" || arg == "--version" {
+				isVersionMode = true
+				break
+			}
+		}
+
+		// If you just want to check the version information, return a simple default configuration without outputting the initialization log
+		if isVersionMode {
+			return &Config{
+				HttpHost: "0.0.0.0",
+				HttpPort: 5000,
+			}
+		}
+
 		logger.Info("Config is not initialized")
 		// Not initialized, perform initialization
 		InitConfig()
 	}
 	return globalConfig
-}
-
-// GetVersion returns the application version
-func GetVersion() string {
-	return Version
 }

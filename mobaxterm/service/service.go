@@ -8,7 +8,6 @@ import (
 	"license/logger"
 	"license/utils/useragent"
 	"log"
-	"math/rand"
 	"net/http"
 	"regexp"
 	"sort"
@@ -20,13 +19,19 @@ import (
 	"os"
 )
 
-// Initialize random seed
-func init() {
-	rand.Seed(time.Now().UnixNano())
-}
+var (
+	cachedVersion   []string
+	lastFetchTime   time.Time
+	cacheExpiration = 5 * time.Minute
+)
 
 // FetchVersions fetches MobaXterm version numbers from the website
 func FetchVersions() ([]string, error) {
+	// If the cache has not expired, use the cached value
+	if !lastFetchTime.IsZero() && time.Since(lastFetchTime) < cacheExpiration && len(cachedVersion) != 0 {
+		return cachedVersion, nil
+	}
+
 	// Create HTTP client
 	client := &http.Client{
 		Timeout: time.Second * 10,
@@ -115,6 +120,10 @@ func FetchVersions() ([]string, error) {
 
 		return minorI > minorJ
 	})
+
+	// Update cache
+	cachedVersion = versions
+	lastFetchTime = time.Now()
 
 	return versions, nil
 }

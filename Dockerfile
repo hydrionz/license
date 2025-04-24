@@ -14,6 +14,9 @@ RUN npm run build && \
 FROM golang:1.24-alpine AS go-builder
 # 定义版本参数，默认为0.0.1
 ARG VERSION=0.0.1
+ARG HASH=98e6fc08
+ARG TARGETOS
+ARG TARGETARCH
 
 WORKDIR /app
 ENV GO111MODULE=on \
@@ -34,7 +37,7 @@ RUN apk add --no-cache gcc musl-dev
 # 设置CGO启用
 ENV CGO_ENABLED=1
 # 编译Go应用，注入版本信息
-RUN go build -v -ldflags="-X 'license/config.Version=${VERSION}'" -o license ./main.go && \
+RUN go build -v -ldflags="-X 'license/sys.Version=${VERSION} -X license/sys.Hash=${HASH} -X license/sys.Arch=${TARGETOS}/${TARGETARCH}'" -o license ./main.go && \
     ls -la license || echo "验证可执行文件失败，但这可能是因为缺少参数"
 
 FROM alpine:latest

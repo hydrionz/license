@@ -38,6 +38,7 @@ jobs:
       version: ${{ steps.get_version.outputs.version }}
       build_version: ${{ steps.get_version.outputs.build_version }}
       docker_version: ${{ steps.get_version.outputs.docker_version }}
+      build_hash: ${{ steps.get_version.outputs.build_hash }}
     steps:
       - name: Check out code
         uses: actions/checkout@v4
@@ -96,6 +97,11 @@ jobs:
           echo "docker_version=$PURE_VERSION" >> $GITHUB_OUTPUT
           echo "Using version: $VERSION (Build version: $PURE_VERSION)"
           echo "Using version: $VERSION (Docker version: $PURE_VERSION)"
+          
+          # 获取当前提交的SHA哈希值
+          BUILD_HASH=$(git rev-parse --short=12 HEAD)
+          echo "build_hash=$BUILD_HASH" >> $GITHUB_OUTPUT
+          echo "Using hash: $BUILD_HASH"
 
   # 1.Web前端构建阶段
   build_web:
@@ -289,7 +295,7 @@ jobs:
           
           # 构建特定平台的二进制文件
           echo "Building for ${{ matrix.os }} ${{ matrix.arch }}..."
-          CGO_ENABLED=0 GOOS=${{ matrix.os }} GOARCH=${{ matrix.arch }} go build -ldflags "-s -w -X license/config.Version=${{ needs.pre_check.outputs.build_version }}" -o build/${{ matrix.binary_name }} ./main.go
+          CGO_ENABLED=0 GOOS=${{ matrix.os }} GOARCH=${{ matrix.arch }} go build -ldflags "-s -w -X license/sys.Version=${{ needs.pre_check.outputs.build_version }} -X license/sys.Hash=${{ needs.pre_check.outputs.build_hash }} -X license/sys.Arch=${{ matrix.os }}/${{ matrix.arch }}" -o build/${{ matrix.binary_name }} ./main.go
           
           # 验证构建结果
           echo "Built binary:"

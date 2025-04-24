@@ -93,7 +93,8 @@ const MobaXterm: React.FC = () => {
       
       try {
         console.log('Fetching versions...');
-        const fetchedVersions = await mobaxterm.fetchVersions();
+        const timestamp = new Date().getTime();
+        const fetchedVersions = await mobaxterm.fetchVersions(`?_t=${timestamp}`);
         console.log('Fetched versions:', fetchedVersions);
         
         if (fetchedVersions && Array.isArray(fetchedVersions) && fetchedVersions.length > 0) {

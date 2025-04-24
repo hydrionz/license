@@ -20,10 +20,17 @@ export const generateLicense = async (
  * Fetch available MobaXterm versions from the server
  * @returns Array of version strings
  */
-export const fetchVersions = async (): Promise<string[]> => {
+export const fetchVersions = async (queryParam?: string): Promise<string[]> => {
   try {
     console.log('Calling /mobaxterm/versions API');
-    const response = await api.get('/mobaxterm/versions');
+    const url = `/mobaxterm/versions${queryParam || ''}`;
+    const response = await api.get(url, {
+      headers: {
+        'Cache-Control': 'no-cache, no-store',
+        'Pragma': 'no-cache',
+        'Expires': '0'
+      }
+    });
     console.log('API response:', response);
     
     // Backend directly returns an array

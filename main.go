@@ -2,6 +2,7 @@ package main
 
 import (
 	"embed"
+	"flag"
 	"fmt"
 	"github.com/gin-contrib/static"
 	"github.com/gin-gonic/gin"
@@ -10,6 +11,7 @@ import (
 	"license/initialize"
 	"license/logger"
 	"license/router"
+	"license/sys"
 	"net/http"
 	"strings"
 )
@@ -18,6 +20,22 @@ import (
 var EmbedFrontendFS embed.FS
 
 func main() {
+	// Define version flag
+	versionFlag := flag.Bool("version", false, "Print version information and exit")
+	flag.Parse()
+
+	versionInfo := fmt.Sprintf("License v%s commit(%s) %s", sys.Version, sys.Hash, sys.Arch)
+
+	// If the version flag is specified, output version information from the constant and exit immediately
+	if *versionFlag {
+		// Print version information
+		fmt.Println(versionInfo)
+		return
+	}
+
+	// output version information to log
+	logger.Sys(versionInfo)
+
 	// Initialize global configuration
 	config.InitConfig()
 	// Initialize components

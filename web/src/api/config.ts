@@ -1,4 +1,4 @@
-import axios from 'axios';
+import axios, {AxiosRequestConfig} from 'axios';
 import { message } from 'antd';
 import { ApiResponse } from '../types';
 
@@ -13,9 +13,15 @@ const axiosInstance = axios.create({
 
 // 提供一个通用的API请求函数
 const api = {
-  async get<T = any>(url: string, params?: any): Promise<T> {
+  async get<T = any>(url: string, config?: AxiosRequestConfig): Promise<T> {
     try {
-      const response = await axiosInstance.get(url, { params });
+      const response = await axiosInstance.get(url, config);
+
+      // 特殊处理服务器规则接口，不再期望ApiResponse包装
+      if (url.includes('/server/version')) {
+        // 直接返回接口响应内容
+        return response.data as T;
+      }
       
       // 特殊处理JetBrains激活码接口，不再期望ApiResponse包装
       if (url.includes('/jetbrains/generate')) {

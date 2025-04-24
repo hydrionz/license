@@ -34,11 +34,16 @@ VERSION=$(git describe --tags --abbrev=0 2>/dev/null || echo "0.0.1")
 VERSION=$(echo $VERSION | sed 's/^v//')
 echo "Using version: $VERSION"
 
+# 获取Git提交的哈希值
+HASH=$(git rev-parse --short=12 HEAD)
+echo "Using commit hash: $HASH"
+
 # 使用 Docker Buildx 构建镜像，同时标记为 latest 和 VERSION，支持多架构
 docker buildx build \
   --no-cache \
   --platform linux/amd64,linux/arm64 \
   --build-arg VERSION=$VERSION \
+  --build-arg HASH=$HASH \
   -t ${HUB_USER}/${HUB_REPO}:$VERSION \
   -t ${HUB_USER}/${HUB_REPO}:latest . \
   --push \

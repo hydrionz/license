@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Layout, Menu, Button, Drawer, Tooltip } from 'antd';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
@@ -125,18 +125,7 @@ const MainLayout: React.FC = () => {
   const [latestVersion, setLatestVersion] = useState<string>("");
   const hasRequestedRef = useRef(false);
 
-  useEffect(() => {
-    const fetchWithDelay = setTimeout(() => {
-      if (!hasRequestedRef.current) {
-        hasRequestedRef.current = true;
-        fetchVersion();
-      }
-    }, 50);
-
-    return () => clearTimeout(fetchWithDelay);
-  }, []);
-
-  const fetchVersion = async () => {
+  const fetchVersion = useCallback(async () => {
     try {
       const timestamp = new Date().getTime();
       const versionData = await server.getVersion(`?_t=${timestamp}`);
@@ -157,7 +146,18 @@ const MainLayout: React.FC = () => {
         setVersion("0.0.1");
       }
     }
-  };
+  }, [version]);
+
+  useEffect(() => {
+    const fetchWithDelay = setTimeout(() => {
+      if (!hasRequestedRef.current) {
+        hasRequestedRef.current = true;
+        fetchVersion();
+      }
+    }, 50);
+
+    return () => clearTimeout(fetchWithDelay);
+  }, [fetchVersion]);
 
   useEffect(() => {
     setIsMobile(responsive.isMobile());

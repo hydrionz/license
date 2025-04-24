@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Typography, Form, Button, Input, Select, Alert, message, Card, Spin } from 'antd';
+import { Typography, Form, Button, Input, Select, Alert, message, Card, Spin, Row, Col } from 'antd';
 import styled from 'styled-components';
 import { useTranslation } from 'react-i18next';
 import PageHeader from '../components/PageHeader';
@@ -9,7 +9,7 @@ const { Paragraph } = Typography;
 const { Option } = Select;
 
 const FormWrapper = styled.div`
-  max-width: 600px;
+  width: 100%;
   margin-bottom: 32px;
 `;
 
@@ -194,79 +194,84 @@ const MobaXterm: React.FC = () => {
 
       <FormWrapper>
         <Form form={form} onFinish={handleGenerateLicense} layout="vertical">
-          <Form.Item
-            name="username"
-            label={t('mobaxterm.form.username')}
-            rules={[{ required: true, message: t('mobaxterm.form.usernamePlaceholder') }]}
-          >
-            <Input placeholder={t('mobaxterm.form.usernamePlaceholder')} />
-          </Form.Item>
-
-          <Form.Item
-            name="version"
-            label={t('mobaxterm.form.version')}
-            rules={[{ required: true, message: t('mobaxterm.form.versionPlaceholder') }]}
-            initialValue={fallbackVersions[0]}
-          >
-            <Select 
-              placeholder={t('mobaxterm.form.versionPlaceholder')}
-              loading={loadingVersions}
-              notFoundContent={loadingVersions ? <Spin size="small" /> : null}
-              showSearch
-              optionFilterProp="children"
-              onDropdownVisibleChange={(open) => {
-                if (open) {
-                  console.log('Dropdown opened, available versions:', versions);
-                }
-              }}
-            >
-              {versions.map((version) => (
-                <Option key={version} value={version}>
-                  {version}
-                </Option>
-              ))}
-            </Select>
-          </Form.Item>
-
-          <Form.Item
-            label={t('mobaxterm.form.count')}
-            name="count"
-            initialValue="1000"
-            rules={[
-              {
-                required: true,
-                message: t('mobaxterm.form.countPlaceholder')
-              },
-              {
-                pattern: /^[1-9]\d*$/,
-                message: t('mobaxterm.form.countInvalid')
-              }
-            ]}
-          >
-            <Input 
-              placeholder={t('mobaxterm.form.countPlaceholder')} 
-              type="number"
-              min={1}
-              step={1}
-              onKeyDown={(e) => {
-                // Prevent typing e, +, - or decimal point
-                if (['+', '-', 'e', '.'].includes(e.key)) {
-                  e.preventDefault();
-                }
-              }}
-              onChange={(e) => {
-                // Remove any leading zeros
-                if (e.target.value.startsWith('0')) {
-                  e.target.value = e.target.value.replace(/^0+/, '');
-                }
-                // If empty after removing zeros, set to empty
-                if (e.target.value === '') {
-                  e.target.value = '';
-                }
-              }}
-            />
-          </Form.Item>
-
+          <Row gutter={16}>
+            <Col xs={24} sm={12} md={8}>
+              <Form.Item
+                name="username"
+                label={t('mobaxterm.form.username')}
+                rules={[{ required: true, message: t('mobaxterm.form.usernamePlaceholder') }]}
+              >
+                <Input placeholder={t('mobaxterm.form.usernamePlaceholder')} />
+              </Form.Item>
+            </Col>
+            <Col xs={24} sm={12} md={8}>
+              <Form.Item
+                name="version"
+                label={t('mobaxterm.form.version')}
+                rules={[{ required: true, message: t('mobaxterm.form.versionPlaceholder') }]}
+                initialValue={fallbackVersions[0]}
+              >
+                <Select 
+                  placeholder={t('mobaxterm.form.versionPlaceholder')}
+                  loading={loadingVersions}
+                  notFoundContent={loadingVersions ? <Spin size="small" /> : null}
+                  showSearch
+                  optionFilterProp="children"
+                  onDropdownVisibleChange={(open) => {
+                    if (open) {
+                      console.log('Dropdown opened, available versions:', versions);
+                    }
+                  }}
+                >
+                  {versions.map((version) => (
+                    <Option key={version} value={version}>
+                      {version}
+                    </Option>
+                  ))}
+                </Select>
+              </Form.Item>
+            </Col>
+            <Col xs={24} sm={12} md={8}>
+              <Form.Item
+                label={t('mobaxterm.form.count')}
+                name="count"
+                initialValue="1000"
+                rules={[
+                  {
+                    required: true,
+                    message: t('mobaxterm.form.countPlaceholder')
+                  },
+                  {
+                    pattern: /^[1-9]\d*$/,
+                    message: t('mobaxterm.form.countInvalid')
+                  }
+                ]}
+              >
+                <Input 
+                  placeholder={t('mobaxterm.form.countPlaceholder')} 
+                  type="number"
+                  min={1}
+                  step={1}
+                  onKeyDown={(e) => {
+                    // Prevent typing e, +, - or decimal point
+                    if (['+', '-', 'e', '.'].includes(e.key)) {
+                      e.preventDefault();
+                    }
+                  }}
+                  onChange={(e) => {
+                    // Remove any leading zeros
+                    if (e.target.value.startsWith('0')) {
+                      e.target.value = e.target.value.replace(/^0+/, '');
+                    }
+                    // If empty after removing zeros, set to empty
+                    if (e.target.value === '') {
+                      e.target.value = '';
+                    }
+                  }}
+                />
+              </Form.Item>
+            </Col>
+          </Row>
           <Form.Item>
             <Button type="primary" htmlType="submit" loading={loading}>
               {t('mobaxterm.form.generateButton')}

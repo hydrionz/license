@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Typography, Form, Button, Input, DatePicker, Alert, message, Card } from 'antd';
+import { Typography, Form, Button, Input, DatePicker, Alert, message, Card, Row, Col } from 'antd';
 import styled from 'styled-components';
 import dayjs from 'dayjs';
 import type { Dayjs } from 'dayjs';
@@ -10,7 +10,7 @@ import { gitlab } from '../api';
 const { Paragraph } = Typography;
 
 const FormWrapper = styled.div`
-  max-width: 600px;
+  width: 100%;
   margin-bottom: 32px;
 `;
 
@@ -125,49 +125,56 @@ const GitLab: React.FC = () => {
 
       <FormWrapper>
         <Form form={form} onFinish={handleGenerateLicense} layout="vertical">
-          <Form.Item
-            name="name"
-            label={t('gitlab.form.name')}
-            rules={[{ required: true, message: t('gitlab.form.namePlaceholder') }]}
-          >
-            <Input placeholder={t('gitlab.form.namePlaceholder')} />
-          </Form.Item>
-
-          <Form.Item
-            name="email"
-            label={t('gitlab.form.email')}
-            rules={[
-              { required: true, message: t('gitlab.form.emailPlaceholder') },
-              { type: 'email', message: t('gitlab.form.emailInvalid') },
-            ]}
-          >
-            <Input placeholder={t('gitlab.form.emailPlaceholder')} />
-          </Form.Item>
-
-          <Form.Item
-            name="company"
-            label={t('gitlab.form.company')}
-            rules={[{ required: true, message: t('gitlab.form.companyPlaceholder') }]}
-          >
-            <Input placeholder={t('gitlab.form.companyPlaceholder')} />
-          </Form.Item>
-
-          <Form.Item
-            name="expireTime"
-            label={t('gitlab.form.expireTime')}
-            rules={[{ required: true, message: t('gitlab.form.expireTimePlaceholder') }]}
-            initialValue={getEndOfYear()}
-          >
-            <DatePicker
-              format="YYYY-MM-DD HH:mm:ss"
-              style={{ width: '100%' }}
-              placeholder={t('gitlab.form.expireTimePlaceholder')}
-              showTime={{ defaultValue: dayjs('23:59:59', 'HH:mm:ss') }}
-              disabledDate={(current) => {
-                return current && current < dayjs().endOf('day');
-              }}
-            />
-          </Form.Item>
+          <Row gutter={16}>
+            <Col xs={24} sm={12} md={12}>
+              <Form.Item
+                name="name"
+                label={t('gitlab.form.name')}
+                rules={[{ required: true, message: t('gitlab.form.namePlaceholder') }]}
+              >
+                <Input placeholder={t('gitlab.form.namePlaceholder')} />
+              </Form.Item>
+            </Col>
+            <Col xs={24} sm={12} md={12}>
+              <Form.Item
+                name="email"
+                label={t('gitlab.form.email')}
+                rules={[
+                  { required: true, message: t('gitlab.form.emailPlaceholder') },
+                  { type: 'email', message: t('gitlab.form.emailInvalid') },
+                ]}
+              >
+                <Input placeholder={t('gitlab.form.emailPlaceholder')} />
+              </Form.Item>
+            </Col>
+            <Col xs={24} sm={12} md={12}>
+              <Form.Item
+                name="company"
+                label={t('gitlab.form.company')}
+                rules={[{ required: true, message: t('gitlab.form.companyPlaceholder') }]}
+              >
+                <Input placeholder={t('gitlab.form.companyPlaceholder')} />
+              </Form.Item>
+            </Col>
+            <Col xs={24} sm={12} md={12}>
+              <Form.Item
+                name="expireTime"
+                label={t('gitlab.form.expireTime')}
+                rules={[{ required: true, message: t('gitlab.form.expireTimePlaceholder') }]}
+                initialValue={getEndOfYear()}
+              >
+                <DatePicker
+                  format="YYYY-MM-DD HH:mm:ss"
+                  style={{ width: '100%' }}
+                  placeholder={t('gitlab.form.expireTimePlaceholder')}
+                  showTime={{ defaultValue: dayjs('23:59:59', 'HH:mm:ss') }}
+                  disabledDate={(current) => {
+                    return current && current < dayjs().endOf('day');
+                  }}
+                />
+              </Form.Item>
+            </Col>
+          </Row>
 
           <Form.Item>
             <Button type="primary" htmlType="submit" loading={loading}>

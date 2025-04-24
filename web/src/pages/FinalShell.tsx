@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import {Typography, Form, Button, Input, Alert, Card, App} from 'antd';
+import {Typography, Form, Button, Input, Alert, Card, App, Row, Col} from 'antd';
 import styled from 'styled-components';
 import { useTranslation } from 'react-i18next';
 import { CopyOutlined, CheckOutlined } from '@ant-design/icons';
@@ -10,7 +10,7 @@ import { copyAndManageState } from '../utils/clipboard';
 const { Paragraph } = Typography;
 
 const FormWrapper = styled.div`
-  max-width: 600px;
+  width: 100%;
   margin-bottom: 32px;
 `;
 
@@ -183,14 +183,17 @@ const FinalShell: React.FC = () => {
 
       <FormWrapper>
         <Form form={form} onFinish={handleGenerateLicense} layout="vertical">
-          <Form.Item
-            name="machineCode"
-            label={t('finalshell.machineCode')}
-            rules={[{ required: true, message: t('finalshell.machineCodeRequired') }]}
-          >
-            <Input placeholder={t('finalshell.enterMachineCode')} />
-          </Form.Item>
-
+          <Row gutter={16}>
+            <Col xs={24} sm={12}>
+              <Form.Item
+                name="machineCode"
+                label={t('finalshell.machineCode')}
+                rules={[{ required: true, message: t('finalshell.machineCodeRequired') }]}
+              >
+                <Input placeholder={t('finalshell.enterMachineCode')} />
+              </Form.Item>
+            </Col>
+          </Row>
           <Form.Item>
             <Button type="primary" htmlType="submit" loading={loading}>
               {t('finalshell.generateButton')}
@@ -201,30 +204,32 @@ const FinalShell: React.FC = () => {
 
       {authorizationCodes.length > 0 && (
         <FormCard title={t('finalshell.registrationSuccess')}>
-          {authorizationCodes.map((code, index) => {
-            const versionLabelKey = versionLabels[index] || '';
-            const copyKey = `code-${index}`;
+          <Row gutter={16}>
+            {authorizationCodes.map((code, index) => {
+              const versionLabelKey = versionLabels[index] || '';
+              const copyKey = `code-${index}`;
 
-            return (
-              <div key={index} style={{marginBottom: 16}}>
-                <CodeLabel>{t(versionLabelKey)}</CodeLabel>
-                <CodeContainer>
-                  <AuthorizationCodeContainer>
-                    {code}
-                    <ButtonContainer>
-                      <CopyButton
-                        size="small"
-                        type="primary"
-                        ghost
-                        icon={copying[copyKey] ? <CheckOutlined /> : <CopyOutlined />}
-                        onClick={() => copyToClipboard(copyKey, code)}
-                      />
-                    </ButtonContainer>
-                  </AuthorizationCodeContainer>
-                </CodeContainer>
-              </div>
-            );
-          })}
+              return (
+                <Col key={index} xs={24} sm={12} md={12} style={{marginBottom: 16}}>
+                  <CodeLabel>{t(versionLabelKey)}</CodeLabel>
+                  <CodeContainer>
+                    <AuthorizationCodeContainer>
+                      {code}
+                      <ButtonContainer>
+                        <CopyButton
+                          size="small"
+                          type="primary"
+                          ghost
+                          icon={copying[copyKey] ? <CheckOutlined /> : <CopyOutlined />}
+                          onClick={() => copyToClipboard(copyKey, code)}
+                        />
+                      </ButtonContainer>
+                    </AuthorizationCodeContainer>
+                  </CodeContainer>
+                </Col>
+              );
+            })}
+          </Row>
         </FormCard>
       )}
 

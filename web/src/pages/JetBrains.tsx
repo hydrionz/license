@@ -13,7 +13,6 @@ import {
 } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
 import PageHeader from '../components/PageHeader';
-import ResultCard from '../components/ResultCard';
 import { jetbrains } from '../api';
 import { JetBrainsLicense } from '../types';
 import { copyAndManageState } from '../utils/clipboard';
@@ -85,6 +84,37 @@ const LicenseResultCard = styled(Card)`
 const LabelText = styled(Text)`
   font-weight: 500;
   color: #4b5563;
+`;
+
+const ServerAddressContainer = styled.div`
+  position: relative;
+  background-color: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 16px;
+  padding-right: 65px; /* Ensure content doesn't overlap with buttons */
+  margin-bottom: 16px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  overflow-wrap: break-word;
+  word-break: break-all;
+  
+  @media (max-width: 768px) {
+    padding-right: 70px;
+  }
+`;
+
+const ButtonsContainer = styled.div`
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: flex;
+  gap: 4px;
+  z-index: 2;
+  
+  @media (max-width: 768px) {
+    top: 4px;
+    right: 4px;
+  }
 `;
 
 // 创建自定义的切换按钮容器
@@ -404,13 +434,41 @@ const JetBrains: React.FC = () => {
             </Paragraph>
 
             {serverRule ? (
-              <ResultCard
-                title={t('jetbrains.serverConfig')}
-                data={{
-                  [t('jetbrains.serverAddress')]: serverAddress,
-                  [t('jetbrains.powerConfLabel')]: serverRule,
-                }}
-              />
+              <div>
+                <Paragraph style={{ marginBottom: 8 }}>
+                  {t('jetbrains.serverAddress')}:
+                </Paragraph>
+                <ServerAddressContainer>
+                  <div style={{ wordBreak: 'break-all', width: '100%' }}>
+                    {serverAddress}
+                  </div>
+                  <ButtonsContainer>
+                    <CopyButton
+                      size="small"
+                      type="primary"
+                      ghost
+                      icon={copying['serverAddress'] ? <CheckOutlined /> : <CopyOutlined />}
+                      onClick={() => copyToClipboard('serverAddress', serverAddress)}
+                    />
+                  </ButtonsContainer>
+                </ServerAddressContainer>
+                
+                <Paragraph style={{ marginBottom: 8, marginTop: 16 }}>
+                  {t('jetbrains.powerConfLabel')}:
+                </Paragraph>
+                <LicenseContent>
+                  {serverRule}
+                  <ButtonContainer>
+                    <CopyButton
+                      size="small"
+                      type="primary"
+                      ghost
+                      icon={copying['serverRule'] ? <CheckOutlined /> : <CopyOutlined />}
+                      onClick={() => copyToClipboard('serverRule', serverRule)}
+                    />
+                  </ButtonContainer>
+                </LicenseContent>
+              </div>
             ) : (
               <Alert
                 message={loadingServerRule ? t('jetbrains.loadingServerRule') : t('jetbrains.serverRuleAutoload')}

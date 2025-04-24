@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import { Typography, Form, Button, Input, DatePicker, Alert, message, Card, Row, Col } from 'antd';
+import { Typography, Form, Button, Input, DatePicker, message, Card, Row, Col } from 'antd';
 import styled from 'styled-components';
 import dayjs from 'dayjs';
 import type { Dayjs } from 'dayjs';
 import { useTranslation } from 'react-i18next';
 import PageHeader from '../components/PageHeader';
+import UsageNotice from '../components/UsageNotice';
 import { gitlab } from '../api';
 
 const { Paragraph } = Typography;
@@ -115,12 +116,9 @@ const GitLab: React.FC = () => {
         {t('gitlab.description')}
       </Paragraph>
 
-      <Alert
+      <UsageNotice
         message={t('gitlab.usageNotice')}
         description={t('gitlab.warningDescription')}
-        type="info"
-        showIcon
-        style={{ marginBottom: 24 }}
       />
 
       <FormWrapper>

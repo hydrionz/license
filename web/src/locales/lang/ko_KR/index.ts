@@ -52,6 +52,9 @@ const koKR = {
   jetbrains: {
     title: 'JetBrains 인증 도우미',
     subTitle: '모든 JetBrains 제품에 대한 인증 정보 획득',
+    description: '이 도구는 IntelliJ IDEA, WebStorm, PyCharm 등 JetBrains 제품의 활성화 코드를 생성합니다.',
+    usageNotice: '사용 안내',
+    warningDescription: '학습 및 테스트 목적으로만 사용하며, 상업적 환경에서는 사용하지 마세요.',
     activationMethod: '인증 방법',
     codeActivation: '인증 코드',
     serverActivation: '온라인 서버 인증',

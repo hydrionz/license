@@ -52,6 +52,9 @@ const jaJP = {
   jetbrains: {
     title: 'JetBrains認可アシスタント',
     subTitle: 'すべてのJetBrains製品の認可情報を取得',
+    description: 'このツールはIntelliJ IDEA、WebStorm、PyCharmなどのJetBrains製品のアクティベーションコードを生成します。',
+    usageNotice: '使用手順',
+    warningDescription: '学習およびテスト目的のみです。商用環境では使用しないでください。',
     activationMethod: '認可方法',
     codeActivation: '認可コード',
     serverActivation: 'オンラインサーバー認可',

@@ -52,6 +52,9 @@ const ruRU = {
   jetbrains: {
     title: 'Помощник авторизации JetBrains',
     subTitle: 'Получите авторизацию для всех продуктов JetBrains',
+    description: 'Этот инструмент генерирует коды активации для продуктов JetBrains, таких как IntelliJ IDEA, WebStorm, PyCharm и др.',
+    usageNotice: 'Инструкции по использованию',
+    warningDescription: 'Только для обучения и тестирования. Не используйте в коммерческой среде.',
     activationMethod: 'Метод авторизации',
     codeActivation: 'Код авторизации',
     serverActivation: 'Авторизация через онлайн-сервер',

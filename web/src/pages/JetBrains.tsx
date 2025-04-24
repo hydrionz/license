@@ -17,6 +17,7 @@ import ResultCard from '../components/ResultCard';
 import { jetbrains } from '../api';
 import { JetBrainsLicense } from '../types';
 import { copyAndManageState } from '../utils/clipboard';
+import UsageNotice from '../components/UsageNotice';
 
 const { Paragraph, Text, Title } = Typography;
 
@@ -321,6 +322,15 @@ const JetBrains: React.FC = () => {
         title={t('jetbrains.title')}
         subTitle={t('jetbrains.subTitle')}
         breadcrumbs={breadcrumbs}
+      />
+
+      <Paragraph>
+        {t('jetbrains.description')}
+      </Paragraph>
+
+      <UsageNotice
+        message={t('jetbrains.usageNotice')}
+        description={t('jetbrains.warningDescription')}
       />
 
       <FormCard title={t('jetbrains.title')}>

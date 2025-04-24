@@ -52,6 +52,9 @@ const zhTW = {
   jetbrains: {
     title: 'JetBrains授權服務',
     subTitle: '獲取所有JetBrains產品的授權信息',
+    description: '此工具可以生成用於JetBrains產品的激活碼，如IntelliJ IDEA、WebStorm、PyCharm等。',
+    usageNotice: '使用說明',
+    warningDescription: '僅供學習和測試使用，請勿用於商業環境。',
     activationMethod: '授權方式',
     codeActivation: '授權碼',
     serverActivation: '在線服務器授權',

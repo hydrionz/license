@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import {Typography, Alert, Card, Button, App} from 'antd';
+import {Typography, Card, Button, App} from 'antd';
 import styled from 'styled-components';
 import { useTranslation } from 'react-i18next';
 import { 
@@ -8,6 +8,7 @@ import {
   ReloadOutlined 
 } from '@ant-design/icons';
 import PageHeader from '../components/PageHeader';
+import UsageNotice from '../components/UsageNotice';
 import { jrebel } from '../api';
 import { copyAndManageState } from '../utils/clipboard';
 
@@ -171,12 +172,9 @@ const JRebel: React.FC = () => {
         {t('jrebel.description')}
       </Paragraph>
 
-      <Alert
+      <UsageNotice
         message={t('jrebel.usageNotice')}
         description={t('jrebel.authorizationDescription')}
-        type="info"
-        showIcon
-        style={{ marginBottom: 24 }}
       />
 
       <FormCard title={t('jrebel.serverConfig')}>

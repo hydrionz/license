@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import {Typography, Form, Button, Input, Alert, Card, App, Row, Col} from 'antd';
+import {Typography, Form, Button, Input, Card, App, Row, Col} from 'antd';
 import styled from 'styled-components';
 import { useTranslation } from 'react-i18next';
 import { CopyOutlined, CheckOutlined } from '@ant-design/icons';
 import PageHeader from '../components/PageHeader';
+import UsageNotice from '../components/UsageNotice';
 import { finalshell } from '../api';
 import { copyAndManageState } from '../utils/clipboard';
 
@@ -173,12 +174,9 @@ const FinalShell: React.FC = () => {
         {t('finalshell.description')}
       </Paragraph>
 
-      <Alert
+      <UsageNotice
         message={t('finalshell.usageNotice')}
         description={t('finalshell.warningDescription')}
-        type="info"
-        showIcon
-        style={{ marginBottom: 24 }}
       />
 
       <FormWrapper>

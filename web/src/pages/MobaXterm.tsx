@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Typography, Form, Button, Input, Select, Alert, message, Card, Spin, Row, Col } from 'antd';
+import { Typography, Form, Button, Input, Select, message, Card, Spin, Row, Col } from 'antd';
 import styled from 'styled-components';
 import { useTranslation } from 'react-i18next';
 import PageHeader from '../components/PageHeader';
+import UsageNotice from '../components/UsageNotice';
 import { mobaxterm } from '../api';
 
 const { Paragraph } = Typography;
@@ -184,12 +185,9 @@ const MobaXterm: React.FC = () => {
         {t('mobaxterm.description')}
       </Paragraph>
 
-      <Alert
+      <UsageNotice
         message={t('mobaxterm.usageNotice')}
         description={t('mobaxterm.warningDescription')}
-        type="info"
-        showIcon
-        style={{ marginBottom: 24 }}
       />
 
       <FormWrapper>

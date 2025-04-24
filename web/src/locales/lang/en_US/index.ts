@@ -50,8 +50,11 @@ const enUS = {
     }
   },
   jetbrains: {
-    title: 'JetBrains Authorization Assistant',
-    subTitle: 'Obtain authorization information for all JetBrains products',
+    title: 'JetBrains Authorization',
+    subTitle: 'JetBrains IDE License Generation',
+    description: 'This tool generates activation codes for JetBrains products such as IntelliJ IDEA, WebStorm, PyCharm, etc.',
+    usageNotice: 'Usage Instructions',
+    warningDescription: 'For learning and testing purposes only. Do not use in commercial environments.',
     activationMethod: 'Authorization Method',
     codeActivation: 'Authorization Code',
     serverActivation: 'Online Server Authorization',

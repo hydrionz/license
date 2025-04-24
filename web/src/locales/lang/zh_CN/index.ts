@@ -52,6 +52,9 @@ const zhCN = {
   jetbrains: {
     title: 'JetBrains授权服务',
     subTitle: '获取所有JetBrains产品的授权信息',
+    description: '此工具可以生成用于JetBrains产品的激活码，如IntelliJ IDEA、WebStorm、PyCharm等。',
+    usageNotice: '使用说明',
+    warningDescription: '仅供学习和测试使用，请勿用于商业环境。',
     activationMethod: '授权方式',
     codeActivation: '授权码',
     serverActivation: '在线服务器授权',

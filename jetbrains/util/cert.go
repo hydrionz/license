@@ -75,13 +75,24 @@ func ReadCertFile(filepath string) (*x509.Certificate, error) {
 }
 
 var (
-	CodeRootCertPath   = config.GetConfig().DataDir + "/jetbrainsCodeCACert.pem"
-	ServerRootCertPath = config.GetConfig().DataDir + "/jetbrainsServerCACert.pem"
-	PrivateKeyPath     = config.GetConfig().DataDir + "/private.pem"
-	PublicKeyPath      = config.GetConfig().DataDir + "/public.pem"
-	CodeCertPath       = config.GetConfig().DataDir + "/code.pem"
-	ServerCertPath     = config.GetConfig().DataDir + "/server.pem"
+	CodeRootCertPath   string
+	ServerRootCertPath string
+	PrivateKeyPath     string
+	PublicKeyPath      string
+	CodeCertPath       string
+	ServerCertPath     string
 )
+
+// InitCertPaths initializes certificate paths using configuration
+func InitCertPaths() {
+	dataDir := config.GetConfig().DataDir
+	CodeRootCertPath = dataDir + "/jetbrainsCodeCACert.pem"
+	ServerRootCertPath = dataDir + "/jetbrainsServerCACert.pem"
+	PrivateKeyPath = dataDir + "/private.pem"
+	PublicKeyPath = dataDir + "/public.pem"
+	CodeCertPath = dataDir + "/code.pem"
+	ServerCertPath = dataDir + "/server.pem"
+}
 
 type FakeCert struct {
 	CodeRootCert   *x509.Certificate
@@ -95,6 +106,11 @@ type FakeCert struct {
 }
 
 func (c *FakeCert) LoadOrGenerate() {
+	// 确保路径已初始化
+	if CodeRootCertPath == "" {
+		InitCertPaths()
+	}
+
 	var err error
 	pemFile, err := ReadPemFile(PrivateKeyPath)
 	if err != nil {
@@ -141,6 +157,11 @@ func (c *FakeCert) LoadOrGenerate() {
 }
 
 func (c *FakeCert) LoadRootCert() (err error) {
+	// 确保路径已初始化
+	if CodeRootCertPath == "" {
+		InitCertPaths()
+	}
+
 	c.CodeRootCert, err = ReadCertFile(CodeRootCertPath)
 	if err != nil {
 		return err
@@ -153,6 +174,11 @@ func (c *FakeCert) LoadRootCert() (err error) {
 }
 
 func (c *FakeCert) LoadCert() (err error) {
+	// 确保路径已初始化
+	if CodeRootCertPath == "" {
+		InitCertPaths()
+	}
+
 	c.CodeCert, err = ReadCertFile(CodeCertPath)
 	if err != nil {
 		return err
@@ -174,6 +200,11 @@ func fileExists(filename string) bool {
 }
 
 func (c *FakeCert) GenerateRootCert() (err error) {
+	// 确保路径已初始化
+	if CodeRootCertPath == "" {
+		InitCertPaths()
+	}
+
 	// Check if files exist, generate if they don't
 	logger.Info("GenerateCodeCert")
 	if !fileExists(CodeCertPath) {

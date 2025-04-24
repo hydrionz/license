@@ -79,20 +79,6 @@ func getEnvBool(key string, defaultValue bool) bool {
 // GetConfig provides access to global configuration
 func GetConfig() *Config {
 	if globalConfig == nil {
-		// Check if running with -version flag
-		isVersionMode := false
-		for _, arg := range os.Args {
-			if arg == "-version" || arg == "--version" {
-				isVersionMode = true
-				break
-			}
-		}
-
-		// If you just want to check the version information, return a simple default configuration without outputting the initialization log
-		if isVersionMode {
-			return &Config{}
-		}
-
 		logger.Info("Config is not initialized")
 		// Not initialized, perform initialization
 		InitConfig()

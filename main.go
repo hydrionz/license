@@ -9,6 +9,7 @@ import (
 	"license/config"
 	"license/cron"
 	"license/initialize"
+	"license/jetbrains/util"
 	"license/logger"
 	"license/router"
 	"license/sys"
@@ -38,10 +39,16 @@ func main() {
 
 	// Initialize global configuration
 	config.InitConfig()
-	// Initialize components
-	initialize.ExecuteInitialize()
+
+	// Initialize certificate paths after config is initialized
+	util.InitCertPaths()
+
 	// Initialize database
 	config.SetupDatabase()
+
+	// Initialize components
+	initialize.ExecuteInitialize()
+
 	// Initialize scheduled tasks
 	cron.InitCron()
 

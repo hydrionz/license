@@ -7,7 +7,7 @@ import (
 )
 
 type Response struct {
-	Code    int         `json:"status"`
+	Code    int         `json:"code"`
 	Message string      `json:"message"`
 	Data    interface{} `json:"data"`
 }
@@ -18,20 +18,17 @@ func HandleSuccess(ctx *gin.Context, data interface{}) {
 	}
 	resp := Response{Code: errorCodeMap[ErrSuccess], Message: ErrSuccess.Error(), Data: data}
 	if _, ok := errorCodeMap[ErrSuccess]; !ok {
-		resp = Response{Code: 0, Message: "", Data: data}
+		resp = Response{Code: 200, Message: "", Data: data}
 	}
 	ctx.JSON(http.StatusOK, resp)
 }
 
-func HandleError(ctx *gin.Context, httpCode int, err error, data interface{}) {
-	if data == nil {
-		data = map[string]string{}
-	}
-	resp := Response{Code: errorCodeMap[err], Message: err.Error(), Data: data}
+func HandleError(ctx *gin.Context, code int, message string) {
+	resp := Response{Code: code, Message: message}
 	if _, ok := errorCodeMap[ErrSuccess]; !ok {
-		resp = Response{Code: 500, Message: "unknown error", Data: data}
+		resp = Response{Code: 500, Message: "unknown error"}
 	}
-	ctx.JSON(httpCode, resp)
+	ctx.JSON(http.StatusOK, resp)
 }
 
 type Error struct {

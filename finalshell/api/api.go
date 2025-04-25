@@ -3,7 +3,7 @@ package api
 import (
 	"github.com/gin-gonic/gin"
 	"license/finalshell/service"
-	"net/http"
+	v1 "license/v1"
 	"strings"
 )
 
@@ -20,9 +20,9 @@ func NewController() *Controller {
 func (controller *Controller) GenerateLicense(c *gin.Context) {
 	machineCode := c.PostForm("machineCode")
 	if strings.TrimSpace(machineCode) == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Machine code cannot be empty"})
+		v1.HandleError(c, 400, "Machine code cannot be empty")
 		return
 	}
 	licenses := service.GenerateLicense(machineCode)
-	c.JSON(http.StatusOK, licenses)
+	v1.HandleSuccess(c, licenses)
 }

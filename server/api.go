@@ -3,6 +3,7 @@ package server
 import (
 	"github.com/gin-gonic/gin"
 	"license/sys"
+	v1 "license/v1"
 )
 
 // Controller Package server provides the server controller for handling API requests.
@@ -16,7 +17,7 @@ func NewServerController() *Controller {
 
 // GetStatus get api status info
 func (ctrl *Controller) GetStatus(c *gin.Context) {
-	c.JSON(200, gin.H{
+	v1.HandleSuccess(c, gin.H{
 		"status": true,
 	})
 }
@@ -31,7 +32,7 @@ func (ctrl *Controller) GetVersion(c *gin.Context) {
 		needUpdate = compareVersions(currentVersion, latestVersion)
 	}
 
-	c.JSON(200, VersionResponse{
+	v1.HandleSuccess(c, VersionResponse{
 		Version:       currentVersion,
 		Hash:          sys.GetHash(),
 		Arch:          sys.GetArch(),

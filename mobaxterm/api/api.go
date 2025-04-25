@@ -3,7 +3,7 @@ package api
 import (
 	"github.com/gin-gonic/gin"
 	"license/mobaxterm/service"
-	"net/http"
+	v1 "license/v1"
 	"strconv"
 )
 
@@ -20,16 +20,12 @@ func NewMobaXtermController() *Controller {
 func (ctrl *Controller) FetchVersions(c *gin.Context) {
 	versions, err := service.FetchVersions()
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"status":  "error",
-			"message": "Failed to fetch versions",
-			"details": err.Error(),
-		})
+		v1.HandleError(c, 500, "Failed to fetch versions")
 		return
 	}
 
 	// Simplified response structure - no nesting to avoid confusion
-	c.JSON(http.StatusOK, versions)
+	v1.HandleSuccess(c, versions)
 }
 
 // GenerateLicense generate handles the license generation process.
@@ -49,7 +45,7 @@ func (ctrl *Controller) GenerateLicense(c *gin.Context) {
 
 	count, err := strconv.Atoi(countStr)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid count value"})
+		v1.HandleError(c, 400, "Invalid count value")
 		return
 	}
 	service.GenerateLicense(count, name, version, c)

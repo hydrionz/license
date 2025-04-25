@@ -1,8 +1,10 @@
 package config
 
 import (
+	"fmt"
 	"github.com/glebarez/sqlite"
 	"gorm.io/driver/mysql"
+	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"license/jetbrains/code/entity"
 	"license/logger"
@@ -25,6 +27,18 @@ func SetupDatabase() {
 		if err != nil {
 			logger.Error("Failed to connect to database:", err)
 		}
+	} else if driver == "postgres" {
+		DB, err = gorm.Open(postgres.New(postgres.Config{
+			DSN:                  dsn,
+			PreferSimpleProtocol: true, // disables implicit prepared statement usage
+			DriverName:           "pgx",
+		}), &gorm.Config{})
+		if err != nil {
+			logger.Error("Failed to connect to database:", err)
+		}
+	} else {
+		logger.Error("Unsupported database driver", fmt.Errorf("unsupported driver: %s", driver))
+		return
 	}
 
 	// Auto-migrate database schema

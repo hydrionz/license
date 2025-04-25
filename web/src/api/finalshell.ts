@@ -1,4 +1,4 @@
-import axios from 'axios';
+import api from "./config";
 
 /**
  * Generate FinalShell license
@@ -12,8 +12,9 @@ import axios from 'axios';
 export const generateLicense = async (machineCode: string): Promise<string[]> => {
   const formData = new FormData();
   formData.append('machineCode', machineCode);
-  
-  // Use axios directly to ensure FormData is correctly transmitted
-  const response = await axios.post('/api/final-shell/generateLicense', formData);
-  return response.data;
+ return  api.post<string[]>('/final-shell/generateLicense', formData, {
+     headers: {
+         'Content-Type': 'multipart/form-data'
+     }
+ })
 }; 

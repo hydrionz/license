@@ -59,7 +59,7 @@ export const generateLicense = async (
   if (effectiveDate) params.effectiveDate = effectiveDate;
   if (codes) params.codes = codes;
   
-  return api.get<JetBrainsLicense>('/jetbrains/generate', params);
+  return api.get<JetBrainsLicense>('/jetbrains/generate', {params: params});
 };
 
 /**

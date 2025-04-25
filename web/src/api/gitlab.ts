@@ -24,8 +24,9 @@ export const generateLicense = async (
 
     // 使用axios直接请求，以便可以设置responseType为blob
     const response = await axios({
+      baseURL: "/api",
       method: 'post',
-      url: '/api/gitlab/generate',
+      url: '/gitlab/generate',
       data: formData,
       headers: {
         'Content-Type': 'multipart/form-data'

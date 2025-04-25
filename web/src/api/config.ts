@@ -11,38 +11,26 @@ const axiosInstance = axios.create({
   },
 });
 
+const skipUrls= [
+    "/jetbrains/generate",
+    "/jetbrains/licenseServerRule",
+]
+
 // 提供一个通用的API请求函数
 const api = {
   async get<T = any>(url: string, config?: AxiosRequestConfig): Promise<T> {
     try {
       const response = await axiosInstance.get(url, config);
 
-      // 特殊处理服务器规则接口，不再期望ApiResponse包装
-      if (url.includes('/server/version')) {
+      let length = skipUrls.filter(item => url.includes(item)).length;
+      if (length > 0) {
         // 直接返回接口响应内容
-        return response.data as T;
-      }
-      
-      // 特殊处理JetBrains激活码接口，不再期望ApiResponse包装
-      if (url.includes('/jetbrains/generate')) {
-        // 直接返回接口响应内容
-        return response.data as T;
-      }
-      
-      // 特殊处理服务器规则接口，不再期望ApiResponse包装
-      if (url.includes('/jetbrains/licenseServerRule')) {
-        // 直接返回接口响应内容
-        return response.data as T;
-      }
-      
-      // 特殊处理MobaXterm版本接口，直接返回数组
-      if (url.includes('/mobaxterm/versions')) {
         return response.data as T;
       }
       
       const apiResponse = response.data as ApiResponse<T>;
       
-      if (apiResponse.status !== 0) {
+      if (apiResponse.code !== 200) {
         message.error(apiResponse.message || '请求失败');
         throw new Error(apiResponse.message || '请求失败');
       }
@@ -59,16 +47,15 @@ const api = {
   async post<T = any>(url: string, data?: any, config?: any): Promise<T> {
     try {
       const response = await axiosInstance.post(url, data, config);
-      
-      // 特殊处理 form-data 请求
-      if (config?.headers?.['Content-Type']?.includes('multipart/form-data')) {
+      // 特殊处理 blob 请求
+      if (config?.responseType?.includes('blob')) {
         // 直接返回接口响应内容
         return response.data as T;
       }
-      
+
       const apiResponse = response.data as ApiResponse<T>;
       
-      if (apiResponse.status !== 0) {
+      if (apiResponse.code !== 200) {
         message.error(apiResponse.message || '请求失败');
         throw new Error(apiResponse.message || '请求失败');
       }

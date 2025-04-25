@@ -34,13 +34,19 @@ func InitConfig() {
 	}
 
 	dataDir := getEnvStr("DATA_DIR", "/data")
-	databaseDsn := fmt.Sprintf("%s/%s", dataDir, getEnvStr("DATABASE_DSN", "license.db"))
+	databaseDriver := getEnvStr("DATABASE_DRIVER", "sqlite")
+	var databaseDsn string
+	if databaseDriver == "sqlite" {
+		databaseDsn = fmt.Sprintf("%s/%s", dataDir, getEnvStr("DATABASE_DSN", "license.db"))
+	} else {
+		databaseDsn = getEnvStr("DATABASE_DSN", "")
+	}
 
 	globalConfig = &Config{
 		HttpHost:       getEnvStr("HTTP_HOST", "0.0.0.0"),
 		HttpPort:       getEnvInt("HTTP_PORT", 5000),
 		DataDir:        dataDir,
-		DatabaseDriver: getEnvStr("DATABASE_DRIVER", "sqlite"),
+		DatabaseDriver: databaseDriver,
 		DatabaseDsn:    databaseDsn,
 		StartTime:      time.Now(),
 	}

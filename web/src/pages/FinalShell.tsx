@@ -7,6 +7,7 @@ import PageHeader from '../components/PageHeader';
 import UsageNotice from '../components/UsageNotice';
 import { finalshell } from '../api';
 import { copyAndManageState } from '../utils/clipboard';
+import { FinalShellLicense } from '../api/finalshell';
 
 const { Paragraph } = Typography;
 
@@ -112,25 +113,25 @@ const FinalShell: React.FC = () => {
   const { t } = useTranslation();
   const { notification } = App.useApp();
   const [loading, setLoading] = useState(false);
-  const [authorizationCodes, setAuthorizationCodes] = useState<string[]>([]);
+  const [licenseData, setLicenseData] = useState<FinalShellLicense | null>(null);
   const [copying, setCopying] = useState<{[key: string]: boolean}>({});
   const [form] = Form.useForm();
 
-  // Version labels in order matching the backend response
-  const versionLabels = [
-    'finalshell.versions.advancedBelow396',
-    'finalshell.versions.proBelow396',
-    'finalshell.versions.advancedAbove396',
-    'finalshell.versions.proAbove396',
-    'finalshell.versions.advancedAbove45',
-    'finalshell.versions.proAbove45'
-  ];
+  // Map of license keys to their translation keys
+  const versionMap = {
+    'advancedBelow396': 'finalshell.versions.advancedBelow396',
+    'proBelow396': 'finalshell.versions.proBelow396',
+    'advancedAbove396': 'finalshell.versions.advancedAbove396',
+    'proAbove396': 'finalshell.versions.proAbove396',
+    'advancedAbove45': 'finalshell.versions.advancedAbove45',
+    'proAbove45': 'finalshell.versions.proAbove45'
+  };
 
   const handleGenerateLicense = async (values: { machineCode: string }) => {
     setLoading(true);
     try {
       const data = await finalshell.generateLicense(values.machineCode);
-      setAuthorizationCodes(data);
+      setLicenseData(data);
     } catch (error) {
       console.error('Generate license failed:', error);
     } finally {
@@ -200,15 +201,15 @@ const FinalShell: React.FC = () => {
         </Form>
       </FormWrapper>
 
-      {authorizationCodes.length > 0 && (
+      {licenseData && (
         <FormCard title={t('finalshell.registrationSuccess')}>
           <Row gutter={16}>
-            {authorizationCodes.map((code, index) => {
-              const versionLabelKey = versionLabels[index] || '';
-              const copyKey = `code-${index}`;
+            {Object.entries(licenseData).map(([key, code], index) => {
+              const versionLabelKey = versionMap[key as keyof typeof versionMap] || '';
+              const copyKey = `code-${key}`;
 
               return (
-                <Col key={index} xs={24} sm={12} md={12} style={{marginBottom: 16}}>
+                <Col key={key} xs={24} sm={12} md={12} style={{marginBottom: 16}}>
                   <CodeLabel>{t(versionLabelKey)}</CodeLabel>
                   <CodeContainer>
                     <AuthorizationCodeContainer>

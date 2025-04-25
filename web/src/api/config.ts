@@ -47,8 +47,9 @@ const api = {
   async post<T = any>(url: string, data?: any, config?: any): Promise<T> {
     try {
       const response = await axiosInstance.post(url, data, config);
-      // 特殊处理 blob 请求
-      if (config?.responseType?.includes('blob')) {
+
+      let length = skipUrls.filter(item => url.includes(item)).length;
+      if (length > 0) {
         // 直接返回接口响应内容
         return response.data as T;
       }

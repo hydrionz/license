@@ -48,7 +48,7 @@ export const generateLicense = async (
       const contentDisposition = response.headers['content-disposition'];
       let filename = 'gitlab-license.key';
       if (contentDisposition) {
-        const filenameMatch = contentDisposition.match(/filename="?(.+)"?/);
+        const filenameMatch = contentDisposition.match(/filename="?([^"]+)"?/);
         if (filenameMatch && filenameMatch[1]) {
           filename = filenameMatch[1];
         }

@@ -20,29 +20,36 @@ func keccak384Hash(msg string) string {
 	return str[12:28]
 }
 
+type FinalShellLicense struct {
+	AdvancedBelow396 string `json:"advancedBelow396"`
+	ProBelow396      string `json:"proBelow396"`
+	AdvancedAbove396 string `json:"advancedAbove396"`
+	ProAbove396      string `json:"proAbove396"`
+	AdvancedAbove45  string `json:"advancedAbove45"`
+	ProAbove45       string `json:"proAbove45"`
+}
+
 // GenerateLicense generates license codes for different FinalShell versions and editions
-// Returns an array of license codes in the following order:
-// [0] - License for Version < 3.9.6 Advanced Edition
-// [1] - License for Version < 3.9.6 Professional Edition
-// [2] - License for 3.9.6 <= Version < 4.5 Advanced Edition
-// [3] - License for 3.9.6 <= Version < 4.5 Professional Edition
-// [4] - License for Version >= 4.5 Advanced Edition
-// [5] - License for Version >= 4.5 Professional Edition
-// Note: Version prefixes are no longer included in the returned strings.
-// Frontend must handle the display of version information.
-func GenerateLicense(machineCode string) []string {
-	var result []string
+func GenerateLicense(machineCode string) FinalShellLicense {
 	// License for Version < 3.9.6 Advanced Edition
-	result = append(result, md5Hash("61305"+machineCode+"8552"))
+	advancedBelow396 := md5Hash("61305" + machineCode + "8552")
 	// License for Version < 3.9.6 Professional Edition
-	result = append(result, md5Hash("2356"+machineCode+"13593"))
+	proBelow396 := md5Hash("2356" + machineCode + "13593")
 	// License for 3.9.6 <= Version < 4.5 Advanced Edition
-	result = append(result, keccak384Hash(machineCode+"hSf(78cvVlS5E"))
+	advancedAbove396 := keccak384Hash(machineCode + "hSf(78cvVlS5E")
 	// License for3.9.6 <= Version < 4.5 Professional Edition
-	result = append(result, keccak384Hash(machineCode+"FF3Go(*Xvbb5s2"))
+	proAbove396 := keccak384Hash(machineCode + "FF3Go(*Xvbb5s2")
 	// License for Version >= 4.5 Advanced Edition
-	result = append(result, keccak384Hash(machineCode+"wcegS3gzA$"))
+	AdvancedAbove45 := keccak384Hash(machineCode + "wcegS3gzA$")
 	// License for Version >= 4.5 Professional Edition
-	result = append(result, keccak384Hash(machineCode+"b(xxkHn%z);x"))
-	return result
+	proAbove45 := keccak384Hash(machineCode + "b(xxkHn%z);x")
+
+	return FinalShellLicense{
+		AdvancedBelow396: advancedBelow396,
+		ProBelow396:      proBelow396,
+		AdvancedAbove396: advancedAbove396,
+		ProAbove396:      proAbove396,
+		AdvancedAbove45:  AdvancedAbove45,
+		ProAbove45:       proAbove45,
+	}
 }

@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/joho/godotenv"
 	"license/logger"
-	"log"
 	"os"
 	"strconv"
 	"time"
@@ -30,7 +29,7 @@ func InitConfig() {
 	// Load .env file
 	err := godotenv.Load()
 	if err != nil {
-		log.Println("No .env file found")
+		logger.Info("No .env file found")
 	}
 
 	dataDir := getEnvStr("DATA_DIR", "/data")

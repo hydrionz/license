@@ -135,26 +135,15 @@ const MobaXterm: React.FC = () => {
   }) => {
     setLoading(true);
     try {
-      // Create FormData
-      const formData = new FormData();
-      formData.append('name', values.username);
-      formData.append('version', values.version);
-      formData.append('count', values.count);
+      const success = await mobaxterm.generateLicense(values.username, values.version, values.count);
 
-      // Get file blob response
-      const blob = await mobaxterm.generateLicense(formData);
-      
-      // Create download
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'Custom.mxtpro';
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-      
-      message.success(t('mobaxterm.success.downloadStarted'));
+      if (success) {
+        // 显示成功消息
+        message.success(t('mobaxterm.success.downloadStarted'));
+      } else {
+        // 虽然不应该到达这里，但以防万一
+        message.warning(t('common.error'));
+      }
     } catch (error) {
       console.error('Failed to generate license:', error);
       message.error(t('common.error'));

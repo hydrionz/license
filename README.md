@@ -18,7 +18,7 @@
 - 支持JetBrains产品、GitLab、FinalShell、MobaXterm和JRebel等软件
 - 基于Gin框架构建的RESTful API接口
 - 使用cron实现定时任务
-- 通过GORM支持数据库存储(MySQL/SQLite)
+- 通过GORM支持数据库存储(MySQL/PostgreSQL/SQLite)
 - 采用RSA算法的安全加密
 - 多语言支持（简体中文、繁体中文、俄语、英语、日语、韩语）
 
@@ -26,6 +26,7 @@
 
 - Go 1.24或更高版本
 - MySQL数据库(开发环境可使用SQLite)
+- Node.js 22或更高版本
 - Docker(可选，用于容器化部署)
 
 ## 安装方式
@@ -69,8 +70,9 @@
 
 - `HTTP_HOST`：服务器绑定的主机地址
 - `HTTP_PORT`：监听的端口
-- `DB_TYPE`：数据库类型(mysql或sqlite)
+- `DB_TYPE`：数据库类型(mysql、postgresql或sqlite)
 - `DB_DSN`：数据库连接字符串
+- `DATA_DIR`：数据存储目录路径
 
 ## GitHub Actions配置
 
@@ -79,24 +81,11 @@
 - `HUB_USER`：您的Docker Hub用户名
 - `HUB_PASS`：您的Docker Hub密码
 - `HUB_REPO`：Docker Hub仓库名称
-- `PUBLIC_REPO_TOKEN`：（可选）具有对公共仓库写入权限的个人访问令牌
-- `PUBLIC_REPO`：（可选）公共仓库路径，格式为`用户名/仓库名`
 
 工作流包括：
 - 每次推送时进行构建和测试
 - 在标签推送或手动触发时构建和发布Docker镜像
 - 创建GitHub发布版本
-- 将发布同步到公共仓库（仅在手动触发时执行，需要配置`PUBLIC_REPO_TOKEN`和`PUBLIC_REPO`）
-
-## API接口
-
-该服务提供多个许可证管理相关的API接口：
-
-- `POST /v1/generate`：生成新的许可证
-- `POST /v1/validate`：验证现有许可证
-- `GET /v1/status`：检查服务状态
-
-详细使用说明请参考API文档。
 
 ## 开发指南
 

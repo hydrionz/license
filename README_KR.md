@@ -18,7 +18,7 @@ Go 언어 기반 라이선스 관리 서비스입니다.
 - JetBrains 제품, GitLab, FinalShell, MobaXterm 및 JRebel 지원
 - Gin 프레임워크로 구축된 RESTful API 인터페이스
 - cron을 사용한 예약 작업
-- GORM(MySQL/SQLite 지원)을 통한 데이터베이스 저장
+- GORM(MySQL/PostgreSQL/SQLite 지원)을 통한 데이터베이스 저장
 - RSA를 사용한 안전한 암호화
 - 다국어 지원(간체 중국어, 번체 중국어, 러시아어, 영어, 일본어, 한국어)
 
@@ -26,6 +26,7 @@ Go 언어 기반 라이선스 관리 서비스입니다.
 
 - Go 1.24 이상
 - MySQL 데이터베이스(개발 환경에서는 SQLite 사용 가능)
+- Node.js 22 이상
 - Docker(선택 사항, 컨테이너화 배포용)
 
 ## 설치 방법
@@ -69,8 +70,9 @@ Go 언어 기반 라이선스 관리 서비스입니다.
 
 - `HTTP_HOST`: 서버를 바인딩할 호스트 주소
 - `HTTP_PORT`: 수신 대기할 포트
-- `DB_TYPE`: 데이터베이스 유형(mysql 또는 sqlite)
+- `DB_TYPE`: 데이터베이스 유형(mysql, postgresql 또는 sqlite)
 - `DB_DSN`: 데이터베이스 연결 문자열
+- `DATA_DIR`: 데이터 저장 디렉토리 경로
 
 ## GitHub Actions 구성
 
@@ -79,24 +81,11 @@ Go 언어 기반 라이선스 관리 서비스입니다.
 - `HUB_USER`: Docker Hub 사용자 이름
 - `HUB_PASS`: Docker Hub 비밀번호
 - `HUB_REPO`: Docker Hub 저장소 이름
-- `PUBLIC_REPO_TOKEN`: (선택 사항) 공개 저장소에 대한 쓰기 권한이 있는 개인 액세스 토큰
-- `PUBLIC_REPO`: (선택 사항) `사용자이름/저장소` 형식의 공개 저장소 경로
 
 워크플로우에는 다음이 포함됩니다:
 - 각 푸시에 대한 빌드 및 테스트
 - 태그 푸시 또는 수동 트리거 시 Docker 이미지 빌드 및 게시
 - GitHub 릴리스 생성
-- 공개 저장소에 릴리스 동기화(수동 트리거 시에만 실행, `PUBLIC_REPO_TOKEN` 및 `PUBLIC_REPO` 필요)
-
-## API 엔드포인트
-
-API는 라이선스 관리를 위한 다양한 엔드포인트를 제공합니다:
-
-- `POST /v1/generate`: 새 라이선스 생성
-- `POST /v1/validate`: 기존 라이선스 검증
-- `GET /v1/status`: 서비스 상태 확인
-
-자세한 사용 지침은 API 문서를 참조하십시오.
 
 ## 개발
 

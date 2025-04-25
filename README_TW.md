@@ -18,7 +18,7 @@
 - 支援JetBrains產品、GitLab、FinalShell、MobaXterm和JRebel等軟體
 - 基於Gin框架構建的RESTful API介面
 - 使用cron實現定時任務
-- 通過GORM支援資料庫儲存(MySQL/SQLite)
+- 通過GORM支援資料庫儲存(MySQL/PostgreSQL/SQLite)
 - 採用RSA演算法的安全加密
 - 多語言支援（簡體中文、繁體中文、俄語、英語、日語、韓語）
 
@@ -26,6 +26,7 @@
 
 - Go 1.24或更高版本
 - MySQL資料庫(開發環境可使用SQLite)
+- Node.js 22或更高版本
 - Docker(可選，用於容器化部署)
 
 ## 安裝方式
@@ -69,8 +70,9 @@
 
 - `HTTP_HOST`：伺服器綁定的主機地址
 - `HTTP_PORT`：監聽的連接埠
-- `DB_TYPE`：資料庫類型(mysql或sqlite)
+- `DB_TYPE`：資料庫類型(mysql、postgresql或sqlite)
 - `DB_DSN`：資料庫連接字串
+- `DATA_DIR`：資料儲存目錄路徑
 
 ## GitHub Actions配置
 
@@ -79,24 +81,11 @@
 - `HUB_USER`：您的Docker Hub用戶名
 - `HUB_PASS`：您的Docker Hub密碼
 - `HUB_REPO`：Docker Hub倉庫名稱
-- `PUBLIC_REPO_TOKEN`：（可選）具有對公共倉庫寫入權限的個人訪問令牌
-- `PUBLIC_REPO`：（可選）公共倉庫路徑，格式為`用戶名/倉庫名`
 
 工作流包括：
 - 每次推送時進行構建和測試
 - 在標籤推送或手動觸發時構建和發布Docker映像
 - 創建GitHub發布版本
-- 將發布同步到公共倉庫（僅在手動觸發時執行，需要配置`PUBLIC_REPO_TOKEN`和`PUBLIC_REPO`）
-
-## API介面
-
-該服務提供多個許可證管理相關的API介面：
-
-- `POST /v1/generate`：生成新的許可證
-- `POST /v1/validate`：驗證現有許可證
-- `GET /v1/status`：檢查服務狀態
-
-詳細使用說明請參考API文檔。
 
 ## 開發指南
 

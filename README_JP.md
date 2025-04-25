@@ -18,7 +18,7 @@ Goベースのソフトウェアライセンス検証と認証管理サービス
 - JetBrains製品、GitLab、FinalShell、MobaXterm、JRebelなどのサポート
 - GinフレームワークによるRESTful APIインターフェース
 - cronによるスケジュールタスク
-- GORM（MySQL/SQLiteサポート）によるデータベース保存
+- GORM（MySQL/PostgreSQL/SQLiteサポート）によるデータベース保存
 - RSAによる安全な暗号化
 - 多言語サポート（簡体字中国語、繁体字中国語、ロシア語、英語、日本語、韓国語）
 
@@ -26,6 +26,7 @@ Goベースのソフトウェアライセンス検証と認証管理サービス
 
 - Go 1.24以上
 - MySQLデータベース（開発環境ではSQLiteも可）
+- Node.js 22以上
 - Docker（オプション、コンテナ化デプロイメント用）
 
 ## インストール方法
@@ -69,8 +70,9 @@ Goベースのソフトウェアライセンス検証と認証管理サービス
 
 - `HTTP_HOST`：サーバーのホストアドレス
 - `HTTP_PORT`：リッスンするポート
-- `DB_TYPE`：データベースタイプ（mysqlまたはsqlite）
+- `DB_TYPE`：データベースタイプ（mysql、postgresqlまたはsqlite）
 - `DB_DSN`：データベース接続文字列
+- `DATA_DIR`：データ保存ディレクトリのパス
 
 ## GitHub Actions設定
 
@@ -79,24 +81,11 @@ Goベースのソフトウェアライセンス検証と認証管理サービス
 - `HUB_USER`：Docker Hubのユーザー名
 - `HUB_PASS`：Docker Hubのパスワード
 - `HUB_REPO`：Docker Hubリポジトリ名
-- `PUBLIC_REPO_TOKEN`：（オプション）公開リポジトリへの書き込み権限を持つパーソナルアクセストークン
-- `PUBLIC_REPO`：（オプション）`ユーザー名/リポジトリ`形式の公開リポジトリパス
 
 ワークフローには以下が含まれます：
 - 各プッシュでのビルドとテスト
 - タグプッシュまたは手動トリガーでのDockerイメージビルドと公開
 - GitHubリリースの作成
-- 公開リポジトリへのリリースの同期（手動トリガー時のみ、`PUBLIC_REPO_TOKEN`と`PUBLIC_REPO`が必要）
-
-## APIエンドポイント
-
-APIは様々なライセンス管理エンドポイントを提供します：
-
-- `POST /v1/generate`：新しいライセンスを生成
-- `POST /v1/validate`：既存のライセンスを検証
-- `GET /v1/status`：サービスの状態を確認
-
-詳細な使用方法についてはAPIドキュメントを参照してください。
 
 ## 開発
 

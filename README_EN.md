@@ -18,7 +18,7 @@ A Go-based service for managing software license validation and authentication.
 - Support for JetBrains products, GitLab, FinalShell, MobaXterm, and JRebel
 - RESTful API interface built with Gin framework
 - Scheduled tasks with cron
-- Database storage with GORM (MySQL/SQLite support)
+- Database storage with GORM (MySQL/PostgreSQL/SQLite support)
 - Secure encryption using RSA
 - Multilingual support (Simplified Chinese, Traditional Chinese, Russian, English, Japanese, Korean)
 
@@ -26,6 +26,7 @@ A Go-based service for managing software license validation and authentication.
 
 - Go 1.24 or higher
 - MySQL database (or SQLite for development)
+- Node.js 22 or higher
 - Docker (optional, for containerized deployment)
 
 ## Installation
@@ -69,8 +70,9 @@ Configuration is handled through environment variables and the `.env` file:
 
 - `HTTP_HOST`: The host address to bind the server
 - `HTTP_PORT`: The port to listen on
-- `DB_TYPE`: Database type (mysql or sqlite)
+- `DB_TYPE`: Database type (mysql, postgresql or sqlite)
 - `DB_DSN`: Database connection string
+- `DATA_DIR`: Data storage directory path
 
 ## GitHub Actions Configuration
 
@@ -79,24 +81,11 @@ This project includes GitHub Actions workflows for automated building, testing, 
 - `HUB_USER`: Your Docker Hub username
 - `HUB_PASS`: Your Docker Hub password
 - `HUB_REPO`: Docker Hub repository name
-- `PUBLIC_REPO_TOKEN`: (Optional) Personal access token with write permissions to the public repository
-- `PUBLIC_REPO`: (Optional) Public repository path in the format `username/repo`
 
 The workflows include:
 - Building and testing on each push
 - Docker image building and publishing on tags or manual triggers
 - Creating GitHub releases
-- Synchronizing releases to a public repository (only for manual triggers, requires `PUBLIC_REPO_TOKEN` and `PUBLIC_REPO`)
-
-## API Endpoints
-
-The API provides various endpoints for license management:
-
-- `POST /v1/generate`: Generate a new license
-- `POST /v1/validate`: Validate an existing license
-- `GET /v1/status`: Check the service status
-
-Refer to the API documentation for detailed usage instructions.
 
 ## Development
 

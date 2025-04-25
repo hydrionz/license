@@ -10,7 +10,7 @@
 ![GitHub Release](https://img.shields.io/github/v/release/nannanStrawberry314/license?color=brightgreen)
 ![Docker Pulls](https://img.shields.io/docker/pulls/raspberrycheese/license?color=blueviolet)
 
-[简体中文](README.md) | [繁體中文](README_TW.md) | [Русский](README_RU.md) | [English](README_EN.md) | [日本語](README_JP.md) | [한국어](README_KR.md)
+[简体中文](README.md) | [繁體中文](docs/README_TW.md) | [Русский](docs/README_RU.md) | [English](docs/README_EN.md) | [日本語](docs/README_JP.md) | [한국어](docs/README_KR.md)
 
 ## 功能特点
 

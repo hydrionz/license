@@ -13,8 +13,8 @@ import (
 // VersionResponse defines the version response structure
 type VersionResponse struct {
 	Version       string `json:"version"`
-	Hash          string `json:"hash"`
-	Arch          string `json:"arch"`
+	Build         string `json:"build"`
+	OsArch        string `json:"osArch"`
 	NeedUpdate    bool   `json:"needUpdate"`
 	LatestVersion string `json:"latestVersion,omitempty"`
 }

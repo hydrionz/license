@@ -12,21 +12,21 @@ VERSION=$(echo $VERSION | sed 's/^v//')
 echo "Using version: $VERSION"
 
 # 生成随机哈希值 (8位字母数字组合)
-HASH=$(openssl rand -hex 4)
-echo "Using hash: $HASH"
+BUILD=$(openssl rand -hex 4)
+echo "Using hash: $BUILD"
 
 # 创建 build 目录，如果不存在的话
 mkdir -p build
 
 # Linux amd64
-CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="-s -w -X license/sys.Version=${VERSION} -X license/sys.Hash=${HASH} -X license/sys.Arch=linux/amd64" -o build/license-linux-amd64 .
+CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="-s -w -X license/sys.Version=${VERSION} -X license/sys.Build=${BUILD} -X license/sys.OsArch=linux/amd64" -o build/license-linux-amd64 .
 # Linux arm64
-CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build -ldflags="-s -w -X license/sys.Version=${VERSION} -X license/sys.Hash=${HASH} -X license/sys.Arch=linux/arm64" -o build/license-linux-arm64 .
+CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build -ldflags="-s -w -X license/sys.Version=${VERSION} -X license/sys.Build=${BUILD} -X license/sys.OsArch=linux/arm64" -o build/license-linux-arm64 .
 # macOS amd64
-CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build -ldflags="-s -w -X license/sys.Version=${VERSION} -X license/sys.Hash=${HASH} -X license/sys.Arch=darwin/amd64" -o build/license-darwin-amd64 .
+CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build -ldflags="-s -w -X license/sys.Version=${VERSION} -X license/sys.Build=${BUILD} -X license/sys.OsArch=darwin/amd64" -o build/license-darwin-amd64 .
 # macOS arm64
-CGO_ENABLED=0 GOOS=darwin GOARCH=arm64 go build -ldflags="-s -w -X license/sys.Version=${VERSION} -X license/sys.Hash=${HASH} -X license/sys.Arch=darwin/arm64" -o build/license-darwin-arm64 .
+CGO_ENABLED=0 GOOS=darwin GOARCH=arm64 go build -ldflags="-s -w -X license/sys.Version=${VERSION} -X license/sys.Build=${BUILD} -X license/sys.OsArch=darwin/arm64" -o build/license-darwin-arm64 .
 # Windows amd64
-CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -ldflags="-s -w -X license/sys.Version=${VERSION} -X license/sys.Hash=${HASH} -X license/sys.Arch=windows/amd64" -o build/license-windows-amd64.exe .
+CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -ldflags="-s -w -X license/sys.Version=${VERSION} -X license/sys.Build=${BUILD} -X license/sys.OsArch=windows/amd64" -o build/license-windows-amd64.exe .
 # Windows arm64
-CGO_ENABLED=0 GOOS=windows GOARCH=arm64 go build -ldflags="-s -w -X license/sys.Version=${VERSION} -X license/sys.Hash=${HASH} -X license/sys.Arch=windows/arm64" -o build/license-windows-arm64.exe .
+CGO_ENABLED=0 GOOS=windows GOARCH=arm64 go build -ldflags="-s -w -X license/sys.Version=${VERSION} -X license/sys.Build=${BUILD} -X license/sys.OsArch=windows/arm64" -o build/license-windows-arm64.exe .

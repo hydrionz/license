@@ -34,8 +34,8 @@ func (ctrl *Controller) GetVersion(c *gin.Context) {
 
 	v1.HandleSuccess(c, VersionResponse{
 		Version:       currentVersion,
-		Hash:          sys.GetHash(),
-		Arch:          sys.GetArch(),
+		Build:         sys.GetBuild(),
+		OsArch:        sys.GetOsArch(),
 		NeedUpdate:    needUpdate,
 		LatestVersion: latestVersion,
 	})

@@ -37,7 +37,7 @@ RUN apk add --no-cache gcc musl-dev
 # 设置CGO禁用用
 ENV CGO_ENABLED=0
 # 编译Go应用，注入版本信息
-RUN go build -v -ldflags="-X 'license/sys.Version=${VERSION} -X license/sys.Hash=${HASH} -X license/sys.Arch=${TARGETOS}/${TARGETARCH}'" -o license ./main.go && \
+RUN go build -v -ldflags="-X 'license/sys.Version=${VERSION} -X license/sys.Build=${HASH} -X license/sys.OsArch=${TARGETOS}/${TARGETARCH}'" -o license ./main.go && \
     ls -la license || echo "验证可执行文件失败，但这可能是因为缺少参数"
 
 FROM alpine:latest

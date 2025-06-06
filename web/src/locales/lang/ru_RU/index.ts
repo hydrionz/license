@@ -175,7 +175,13 @@ const ruRU = {
       proAbove45: '4.5 <= Версия < 4.6 Профессиональная редакция',
       advancedAbove46: 'Версия >= 4.6 Расширенная редакция',
       proAbove46: 'Версия >= 4.6 Профессиональная редакция',
-    }
+    },
+    hostBlockTitle: 'Блокировка сетевой проверки',
+    hostBlockDescription: 'Чтобы предотвратить онлайн-проверку программного обеспечения, добавьте следующие правила в файл hosts вашей системы:',
+    hostRules: 'Правила Hosts',
+    hostFilePath: 'Справочный путь к файлу hosts:',
+    hostFilePathWindows: 'Windows: C:\\Windows\\System32\\drivers\\etc\\hosts',
+    hostFilePathMacLinux: 'macOS/Linux: /etc/hosts'
   },
   mobaxterm: {
     title: 'Сервис авторизации MobaXterm',

@@ -175,7 +175,13 @@ const jaJP = {
       proAbove45: '4.5 <= バージョン < 4.6 プロフェッショナルエディション',
       advancedAbove46: 'バージョン >= 4.6 アドバンスドエディション',
       proAbove46: 'バージョン >= 4.6 プロフェッショナルエディション'
-    }
+    },
+    hostBlockTitle: 'ネットワーク認証をブロック',
+    hostBlockDescription: 'ソフトウェアのオンライン認証を防ぐため、以下のルールをシステムのhostsファイルに追加してください：',
+    hostRules: 'Hostsルール',
+    hostFilePath: 'hostsファイルパス参考：',
+    hostFilePathWindows: 'Windows: C:\\Windows\\System32\\drivers\\etc\\hosts',
+    hostFilePathMacLinux: 'macOS/Linux: /etc/hosts'
   },
   mobaxterm: {
     title: 'MobaXterm認可サービス',

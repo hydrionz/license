@@ -175,7 +175,13 @@ const zhCN = {
       proAbove45: '4.5 <= 版本号 < 4.6 专业版',
       advancedAbove46: '版本号 >= 4.6 高级版',
       proAbove46: '版本号 >= 4.6 专业版',
-    }
+    },
+    hostBlockTitle: '屏蔽联网验证',
+    hostBlockDescription: '为了防止软件联网验证，请将以下规则添加到系统的 hosts 文件中：',
+    hostRules: 'Hosts 规则',
+    hostFilePath: 'hosts 文件路径参考：',
+    hostFilePathWindows: 'Windows: C:\\Windows\\System32\\drivers\\etc\\hosts',
+    hostFilePathMacLinux: 'macOS/Linux: /etc/hosts'
   },
   mobaxterm: {
     title: 'MobaXterm 授权服务',

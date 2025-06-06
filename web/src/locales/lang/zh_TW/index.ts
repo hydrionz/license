@@ -175,7 +175,13 @@ const zhTW = {
       proAbove45: '4.5 <= 版本號 < 4.6 專業版',
       advancedAbove46: '版本號 >= 4.6 高級版',
       proAbove46: '版本號 >= 4.6 專業版',
-    }
+    },
+    hostBlockTitle: '屏蔽聯網驗證',
+    hostBlockDescription: '為了防止軟件聯網驗證，請將以下規則添加到系統的 hosts 文件中：',
+    hostRules: 'Hosts 規則',
+    hostFilePath: 'hosts 文件路徑參考：',
+    hostFilePathWindows: 'Windows: C:\\Windows\\System32\\drivers\\etc\\hosts',
+    hostFilePathMacLinux: 'macOS/Linux: /etc/hosts'
   },
   mobaxterm: {
     title: 'MobaXterm 授權服務',

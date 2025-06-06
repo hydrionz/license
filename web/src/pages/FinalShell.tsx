@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import {Typography, Form, Button, Input, Card, App, Row, Col} from 'antd';
 import styled from 'styled-components';
 import { useTranslation } from 'react-i18next';
-import { CopyOutlined, CheckOutlined } from '@ant-design/icons';
+import { CopyOutlined, CheckOutlined, InfoCircleOutlined } from '@ant-design/icons';
 import PageHeader from '../components/PageHeader';
 import UsageNotice from '../components/UsageNotice';
 import { finalshell } from '../api';
@@ -109,6 +109,92 @@ const CodeLabel = styled.div`
   color: #4b5563;
 `;
 
+const HostRulesContainer = styled.div`
+  background-color: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 16px;
+  padding-right: 50px;
+  margin-bottom: 0;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 14px;
+  line-height: 1.6;
+  white-space: pre-line;
+  position: relative;
+  
+  @media (max-width: 768px) {
+    padding: 12px;
+    padding-right: 40px;
+    font-size: 12px;
+  }
+`;
+
+const HostPathNotice = styled.div`
+  background-color: #e6f7ff;
+  border: 1px solid #91d5ff;
+  border-radius: 6px;
+  padding: 15px;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: flex-start;
+  width: 100%;
+  
+  .info-icon {
+    color: #1890ff;
+    margin-right: 12px;
+    margin-top: 1px;
+    flex-shrink: 0;
+    font-size: 14px;
+  }
+  
+  .info-content {
+    flex: 1;
+    
+    .info-title {
+      font-weight: 500;
+      color: rgba(0, 0, 0, 0.85);
+      margin-bottom: 8px;
+      font-size: 14px;
+      line-height: 1.5715;
+    }
+    
+    .path-item {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      color: rgba(0, 0, 0, 0.65);
+      margin-bottom: 4px;
+      font-size: 13px;
+      line-height: 1.5715;
+      
+      &:last-child {
+        margin-bottom: 0;
+      }
+      
+      .platform {
+        font-weight: 600;
+        color: rgba(0, 0, 0, 0.85);
+      }
+    }
+  }
+  
+  @media (max-width: 768px) {
+    padding: 12px;
+    
+    .info-icon {
+      margin-right: 8px;
+    }
+    
+    .info-content {
+      .info-title {
+        font-size: 13px;
+      }
+      
+      .path-item {
+        font-size: 12px;
+      }
+    }
+  }
+`;
+
 const FinalShell: React.FC = () => {
   const { t } = useTranslation();
   const { notification } = App.useApp();
@@ -128,6 +214,18 @@ const FinalShell: React.FC = () => {
     'advancedAbove46': 'finalshell.versions.advancedAbove46',
     'proAbove46': 'finalshell.versions.proAbove46',
   };
+
+  // Host rules for blocking network verification
+  const hostRules = `127.0.0.1    www.youtusoft.com
+127.0.0.1    youtusoft.com
+127.0.0.1    hostbuf.com
+127.0.0.1    www.hostbuf.com
+127.0.0.1    dkys.org
+127.0.0.1    tcpspeed.com
+127.0.0.1    www.wn1998.com
+127.0.0.1    wn1998.com
+127.0.0.1    pwlt.wn1998.com
+127.0.0.1    backup.www.hostbuf.com`;
 
   const handleGenerateLicense = async (values: { machineCode: string }) => {
     setLoading(true);
@@ -233,6 +331,41 @@ const FinalShell: React.FC = () => {
           </Row>
         </FormCard>
       )}
+
+      <FormCard title={t('finalshell.hostBlockTitle')}>
+        <Paragraph style={{ marginBottom: 16, color: '#4b5563' }}>
+          {t('finalshell.hostBlockDescription')}
+        </Paragraph>
+        
+        <HostPathNotice>
+          <InfoCircleOutlined className="info-icon" />
+          <div className="info-content">
+            <div className="info-title">{t('finalshell.hostFilePath')}</div>
+            <div className="path-item">
+              <span className="platform">Windows:</span> C:\Windows\System32\drivers\etc\hosts
+            </div>
+            <div className="path-item">
+              <span className="platform">macOS/Linux:</span> /etc/hosts
+            </div>
+          </div>
+        </HostPathNotice>
+        
+        <CodeLabel>{t('finalshell.hostRules')}</CodeLabel>
+        <CodeContainer>
+          <HostRulesContainer>
+            {hostRules}
+            <ButtonContainer>
+              <CopyButton
+                size="small"
+                type="primary"
+                ghost
+                icon={copying['hostRules'] ? <CheckOutlined /> : <CopyOutlined />}
+                onClick={() => copyToClipboard('hostRules', hostRules)}
+              />
+            </ButtonContainer>
+          </HostRulesContainer>
+        </CodeContainer>
+      </FormCard>
 
       <FormCard title={t('finalshell.instructionsTitle')}>
         <StepItem>

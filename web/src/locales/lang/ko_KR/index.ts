@@ -174,7 +174,13 @@ const koKR = {
       proAbove45: '4.5 <= 버전 < 4.6 전문가 에디션',
       advancedAbove46: '버전 >= 4.6 고급 에디션',
       proAbove46: '버전 >= 4.6 전문가 에디션',
-    }
+    },
+    hostBlockTitle: '네트워크 인증 차단',
+    hostBlockDescription: '소프트웨어의 온라인 인증을 방지하기 위해 다음 규칙을 시스템의 hosts 파일에 추가하세요:',
+    hostRules: 'Hosts 규칙',
+    hostFilePath: 'hosts 파일 경로 참고:',
+    hostFilePathWindows: 'Windows: C:\\Windows\\System32\\drivers\\etc\\hosts',
+    hostFilePathMacLinux: 'macOS/Linux: /etc/hosts'
   },
   mobaxterm: {
     title: 'MobaXterm 인증 서비스',

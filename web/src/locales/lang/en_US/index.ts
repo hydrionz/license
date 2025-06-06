@@ -175,7 +175,13 @@ const enUS = {
       proAbove45: '4.5 <= Version < 4.6 Professional Edition',
       advancedAbove46: 'Version >= 4.6 Advanced Edition',
       proAbove46: 'Version >= 4.6 Professional Edition',
-    }
+    },
+    hostBlockTitle: 'Block Network Verification',
+    hostBlockDescription: 'To prevent software from verifying online, please add the following rules to your system hosts file:',
+    hostRules: 'Hosts Rules',
+    hostFilePath: 'Hosts file path reference:',
+    hostFilePathWindows: 'Windows: C:\\Windows\\System32\\drivers\\etc\\hosts',
+    hostFilePathMacLinux: 'macOS/Linux: /etc/hosts'
   },
   mobaxterm: {
     title: 'MobaXterm Authorization Service',

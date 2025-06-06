@@ -27,6 +27,8 @@ type FinalShellLicense struct {
 	ProAbove396      string `json:"proAbove396"`
 	AdvancedAbove45  string `json:"advancedAbove45"`
 	ProAbove45       string `json:"proAbove45"`
+	AdvancedAbove46  string `json:"advancedAbove46"`
+	ProAbove46       string `json:"proAbove46"`
 }
 
 // GenerateLicense generates license codes for different FinalShell versions and editions
@@ -39,10 +41,14 @@ func GenerateLicense(machineCode string) FinalShellLicense {
 	advancedAbove396 := keccak384Hash(machineCode + "hSf(78cvVlS5E")
 	// License for3.9.6 <= Version < 4.5 Professional Edition
 	proAbove396 := keccak384Hash(machineCode + "FF3Go(*Xvbb5s2")
-	// License for Version >= 4.5 Advanced Edition
+	// License for 4.5 <= Version < 4.6 Advanced Edition
 	AdvancedAbove45 := keccak384Hash(machineCode + "wcegS3gzA$")
-	// License for Version >= 4.5 Professional Edition
+	// License for 4.5 <= Version < 4.6 Professional Edition
 	proAbove45 := keccak384Hash(machineCode + "b(xxkHn%z);x")
+	// License for Version >= 4.6 Advanced Edition
+	AdvancedAbove46 := keccak384Hash(machineCode + "csSf5*xlkgYSX,y")
+	// License for Version >= 4.6 Professional Edition
+	proAbove46 := keccak384Hash(machineCode + "Scfg*ZkvJZc,s,Y")
 
 	return FinalShellLicense{
 		AdvancedBelow396: advancedBelow396,
@@ -51,5 +57,7 @@ func GenerateLicense(machineCode string) FinalShellLicense {
 		ProAbove396:      proAbove396,
 		AdvancedAbove45:  AdvancedAbove45,
 		ProAbove45:       proAbove45,
+		AdvancedAbove46:  AdvancedAbove46,
+		ProAbove46:       proAbove46,
 	}
 }

@@ -171,8 +171,10 @@ const zhTW = {
       proBelow396: '版本號 < 3.9.6 專業版',
       advancedAbove396: '3.9.6 <= 版本號 < 4.5 高級版',
       proAbove396: '3.9.6 <= 版本號 < 4.5 專業版',
-      advancedAbove45: '版本號 >= 4.5 高級版',
-      proAbove45: '版本號 >= 4.5 專業版'
+      advancedAbove45: '4.5 <= 版本號 < 4.6 高級版',
+      proAbove45: '4.5 <= 版本號 < 4.6 專業版',
+      advancedAbove46: '版本號 >= 4.6 高級版',
+      proAbove46: '版本號 >= 4.6 專業版',
     }
   },
   mobaxterm: {

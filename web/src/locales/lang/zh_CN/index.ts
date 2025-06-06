@@ -171,8 +171,10 @@ const zhCN = {
       proBelow396: '版本号 < 3.9.6 专业版',
       advancedAbove396: '3.9.6 <= 版本号 < 4.5 高级版',
       proAbove396: '3.9.6 <= 版本号 < 4.5 专业版',
-      advancedAbove45: '版本号 >= 4.5 高级版',
-      proAbove45: '版本号 >= 4.5 专业版'
+      advancedAbove45: '4.5 <= 版本号 < 4.6 高级版',
+      proAbove45: '4.5 <= 版本号 < 4.6 专业版',
+      advancedAbove46: '版本号 >= 4.6 高级版',
+      proAbove46: '版本号 >= 4.6 专业版',
     }
   },
   mobaxterm: {

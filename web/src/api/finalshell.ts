@@ -7,6 +7,8 @@ export interface FinalShellLicense {
     proAbove396: string;
     advancedAbove45: string;
     proAbove45: string;
+    advancedAbove46: string;
+    proAbove46: string;
 }
 
 /**

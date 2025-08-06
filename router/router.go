@@ -4,8 +4,8 @@ import (
 	"github.com/gin-gonic/gin"
 	finalshell "license/finalshell/api"
 	gitlab "license/gitlab/api"
-	jetbrainCode "license/jetbrains/code/api"
-	jetbrainServer "license/jetbrains/server/api"
+	jetbrainCode "license/jetbrains/api"
+	jetbrainServer "license/jetbrains/api"
 	jrebel "license/jrebel/api"
 	mobaxterm "license/mobaxterm/api"
 	rpc "license/rpc/controller"
@@ -122,14 +122,30 @@ func SetupRouter(r *gin.RouterGroup) {
 	}
 
 	// jetbrains
-	jetbrainsServerApi := jetbrainServer.NewLicenseServerController()
+	jetbrainsServerApi := jetbrainServer.NewServerController()
 	jetbrainsCodeApi := jetbrainCode.NewController()
 
 	jetbrainsGroup := r.Group("/jetbrains")
 	{
+		// License generation
+		jetbrainsGroup.GET("/generate", jetbrainsCodeApi.GenerateLicense)
+		jetbrainsGroup.POST("/generate", jetbrainsCodeApi.GenerateLicense)
+		
+		// Power config
 		jetbrainsGroup.GET("/licenseServerRule", jetbrainsServerApi.LicenseServerRule)
-		jetbrainsGroup.GET("/product/fetchLatest", jetbrainsCodeApi.FetchProduceLatest)
-		jetbrainsGroup.GET("/plugin/fetchLatest", jetbrainsCodeApi.FetchPluginLatest)
-		jetbrainsGroup.GET("/generate", jetbrainsCodeApi.Generate)
+		jetbrainsGroup.GET("/powerConfig", jetbrainsCodeApi.GetPowerConfig)
+		
+		// Product and plugin management
+		jetbrainsGroup.GET("/products", jetbrainsCodeApi.GetProducts)
+		jetbrainsGroup.GET("/products/fetchLatest", jetbrainsCodeApi.FetchProductsLatest)
+		jetbrainsGroup.GET("/plugins", jetbrainsCodeApi.GetPlugins)
+		jetbrainsGroup.GET("/plugins/fetchLatest", jetbrainsCodeApi.FetchPluginsLatest)
+		
+		// Health check
+		jetbrainsGroup.GET("/health", jetbrainsCodeApi.HealthCheck)
+		
+		// Backward compatibility
+		jetbrainsGroup.GET("/product/fetchLatest", jetbrainsCodeApi.FetchProductsLatest)
+		jetbrainsGroup.GET("/plugin/fetchLatest", jetbrainsCodeApi.FetchPluginsLatest)
 	}
 }

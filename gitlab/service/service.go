@@ -295,12 +295,12 @@ var privateKey string
 var publicKey string
 
 // LoadKeys reads, decodes and parses RSA private and public keys.
-func LoadKeys() {
+func LoadKeys() error {
 	// Read public key
 	publicBytes, err := os.ReadFile(config.GetConfig().DataDir + "/.license_encryption_key.pub")
 	if err != nil {
 		log.Printf("Failed to read public key file: %v", err)
-		return
+		return err
 	}
 	// Convert to string
 	publicKey = string(publicBytes)
@@ -309,10 +309,11 @@ func LoadKeys() {
 	privateBytes, err := os.ReadFile(config.GetConfig().DataDir + "/.license_decryption_key.pri")
 	if err != nil {
 		log.Printf("Failed to read private key file: %v", err)
-		return
+		return err
 	}
 	// Convert to string
 	privateKey = string(privateBytes)
+	return nil
 }
 
 // createLicenseJson creates a JSON representation of the license

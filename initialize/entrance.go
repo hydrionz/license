@@ -1,15 +1,21 @@
 package initialize
 
-import "license/config"
-
 // ExecuteInitialize initializes various components
-func ExecuteInitialize() {
-	dataDir := config.GetConfig().DataDir
-
+func ExecuteInitialize() error {
 	// Initialize certificates
-	InitCert(dataDir)
+	if err := InitCert(); err != nil {
+		return err
+	}
+
 	// Initialize GitLab
-	InitGitLabCert()
+	if err := InitGitLabCert(); err != nil {
+		return err
+	}
+
 	// Initialize JetBrains
-	InitJetbrains()
+	if err := InitJetbrains(); err != nil {
+		return err
+	}
+
+	return nil
 }

@@ -6,22 +6,40 @@ import (
 )
 
 // InitJetbrains initialize JetBrains components
-func InitJetbrains() {
-	logger.Info("init fake cert")
-	fakeCert := util.GetFake()
-	fakeCert.LoadOrGenerate()
-	err := fakeCert.LoadRootCert()
-	if err != nil {
-		logger.Error("load root ca err %e", err)
-	}
-	err = fakeCert.GenerateRootCert()
-	if err != nil {
-		logger.Error("generate jet ca err %e", err)
+func InitJetbrains() error {
+	logger.Info("Initializing JetBrains certificates")
+
+	// Initialize certificate paths for JetBrains
+	if err := util.InitCertPaths(GetCertManager()); err != nil {
+		return err
 	}
 
-	err = fakeCert.LoadCert()
-	if err != nil {
-		logger.Error("load my ca err %e", err)
+	fakeCert := util.GetFake()
+
+	// Load or generate keys
+	if err := fakeCert.LoadOrGenerate(); err != nil {
+		logger.Error("Failed to load or generate keys: %v", err)
+		return err
 	}
-	logger.Info("init fake cert done")
+
+	// Load root certificates
+	if err := fakeCert.LoadRootCert(); err != nil {
+		logger.Error("Failed to load root certificates: %v", err)
+		return err
+	}
+
+	// Generate certificates if needed
+	if err := fakeCert.GenerateRootCert(); err != nil {
+		logger.Error("Failed to generate certificates: %v", err)
+		return err
+	}
+
+	// Load certificates
+	if err := fakeCert.LoadCert(); err != nil {
+		logger.Error("Failed to load certificates: %v", err)
+		return err
+	}
+
+	logger.Info("JetBrains certificates initialized successfully")
+	return nil
 }

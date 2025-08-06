@@ -4,6 +4,6 @@ import (
 	"license/gitlab/service"
 )
 
-func InitGitLabCert() {
-	service.LoadKeys()
+func InitGitLabCert() error {
+	return service.LoadKeys()
 }

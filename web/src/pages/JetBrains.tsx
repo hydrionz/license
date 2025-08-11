@@ -235,20 +235,28 @@ const JetBrains: React.FC = () => {
         ? values.effectiveDate.format('YYYY-MM-DD HH:mm:ss') 
         : undefined;
         
-      const data = await jetbrains.generateLicense(
+      const response = await jetbrains.generateLicense(
         values.licenseeName, 
         formattedDate, 
         values.codes
       );
 
-      // Store the raw response data for our custom rendering
-      setRawResponse(typeof data === 'string' ? data : String(data));
-      
-      // Also keep the license object for compatibility
-      setLicense({
-        code: '',
-        product: values.codes?.split(',')[0] || t('jetbrains.unknownProduct')
-      });
+      // Handle new JSON response format
+      if (response && response.code === 200 && response.data) {
+        const { data } = response;
+        setLicense({
+          code: data.activationCode || '',
+          product: values.codes?.split(',')[0] || t('jetbrains.unknownProduct'),
+          activationCode: data.activationCode || '',
+          powerConfig: data.powerConfig || '',
+          licenseId: data.licenseId || '',
+          expiresAt: data.expiresAt || '',
+          generatedAt: data.generatedAt || ''
+        });
+        setRawResponse(null);
+      } else {
+        console.error('Unexpected response format:', response);
+      }
     } catch (error) {
       console.error(`${t('jetbrains.licenseGenerationError')}:`, error);
     } finally {
@@ -266,42 +274,6 @@ const JetBrains: React.FC = () => {
       t('common.copied'),
       t('common.copyFail')
     );
-  };
-
-  // Extract power.conf content from raw response
-  const extractPowerConf = (): string | null => {
-    if (!rawResponse) return null;
-    
-    // Find the power.conf section
-    const startMarker = "================== power.conf ==================";
-    const endMarker = "================== power.conf ==================";
-    
-    const startIdx = rawResponse.indexOf(startMarker);
-    if (startIdx === -1) return null;
-    
-    const contentStart = startIdx + startMarker.length;
-    const endIdx = rawResponse.indexOf(endMarker, contentStart);
-    if (endIdx === -1) return null;
-    
-    return rawResponse.substring(contentStart, endIdx).trim();
-  };
-
-  // Extract activation code from raw response
-  const extractActivationCode = (): string | null => {
-    if (!rawResponse) return null;
-    
-    // Find the activation code section
-    const startMarker = "================== activation code ==================";
-    const endMarker = "================== activation code ==================";
-    
-    const startIdx = rawResponse.indexOf(startMarker);
-    if (startIdx === -1) return null;
-    
-    const contentStart = startIdx + startMarker.length;
-    const endIdx = rawResponse.indexOf(endMarker, contentStart);
-    if (endIdx === -1) return null;
-    
-    return rawResponse.substring(contentStart, endIdx).trim();
   };
 
   const breadcrumbs = [
@@ -482,7 +454,7 @@ const JetBrains: React.FC = () => {
       </FormCard>
 
       {/* Only show license results if they exist AND we're in the activation method that created them */}
-      {license && rawResponse && activationMethod === 'code' && (
+      {license && activationMethod === 'code' && (
         <LicenseResultCard title={<Title level={5} style={{ margin: 0 }}>{t('jetbrains.activationSuccess')}</Title>}>
           <Space direction="vertical" style={{ width: '100%' }}>
             <div>
@@ -492,39 +464,74 @@ const JetBrains: React.FC = () => {
               </LicenseContent>
             </div>
             
-            {extractPowerConf() && (
+            {license.powerConfig && (
               <div style={{ marginTop: 16 }}>
                 <LabelText>{t('jetbrains.powerConfLabel')}:</LabelText>
                 <LicenseContent>
-                  {extractPowerConf()}
+                  {license.powerConfig}
                   <ButtonContainer>
                     <CopyButton
                       size="small"
                       type="primary"
                       ghost
                       icon={copying['powerConf'] ? <CheckOutlined /> : <CopyOutlined />}
-                      onClick={() => copyToClipboard('powerConf', extractPowerConf() || '')}
+                      onClick={() => copyToClipboard('powerConf', license.powerConfig || '')}
                     />
                   </ButtonContainer>
                 </LicenseContent>
               </div>
             )}
             
-            {extractActivationCode() && (
+            {license.activationCode && (
               <div style={{ marginTop: 16 }}>
                 <LabelText>{t('jetbrains.activationCode')}:</LabelText>
                 <LicenseContent>
-                  {extractActivationCode()}
+                  {license.activationCode}
                   <ButtonContainer>
                     <CopyButton
                       size="small"
                       type="primary"
                       ghost
                       icon={copying['activationCode'] ? <CheckOutlined /> : <CopyOutlined />}
-                      onClick={() => copyToClipboard('activationCode', extractActivationCode() || '')}
+                      onClick={() => copyToClipboard('activationCode', license.activationCode || '')}
                     />
                   </ButtonContainer>
                 </LicenseContent>
+              </div>
+            )}
+
+            {license.licenseId && (
+              <div style={{ marginTop: 16 }}>
+                <LabelText>{t('jetbrains.licenseId') || 'License ID'}:</LabelText>
+                <LicenseContent>
+                  {license.licenseId}
+                  <ButtonContainer>
+                    <CopyButton
+                      size="small"
+                      type="primary"
+                      ghost
+                      icon={copying['licenseId'] ? <CheckOutlined /> : <CopyOutlined />}
+                      onClick={() => copyToClipboard('licenseId', license.licenseId || '')}
+                    />
+                  </ButtonContainer>
+                </LicenseContent>
+              </div>
+            )}
+
+            {(license.expiresAt || license.generatedAt) && (
+              <div style={{ marginTop: 16 }}>
+                {license.expiresAt && (
+                  <div style={{ marginBottom: 8 }}>
+                    <LabelText>{t('jetbrains.expiresAt') || 'Expires At'}:</LabelText>
+                    <Text style={{ marginLeft: 8 }}>{license.expiresAt}</Text>
+                  </div>
+                )}
+                {license.generatedAt && (
+                  <div>
+                    <LabelText>{t('jetbrains.generatedAt') || 'Generated At'}:</LabelText>
+                    <Text style={{ marginLeft: 8 }}>{license.generatedAt}</Text>
+                  </div>
+                )}
               </div>
             )}
           </Space>

@@ -15,6 +15,9 @@ export interface JetBrainsLicense {
   serverConfig?: string;
   activationCode?: string;
   powerConf?: string;
+  powerConfig?: string;
+  expiresAt?: string;
+  generatedAt?: string;
 }
 
 // GitLab 许可证类型

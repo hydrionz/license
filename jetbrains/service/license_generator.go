@@ -79,6 +79,7 @@ func (g *LicenseGenerator) GenerateLicense(req types.GenerateLicenseRequest) (*t
 		LicenseID:         licenseID,
 		LicenseeName:      req.LicenseeName,
 		Products:          products,
+		AssigneeName:      "",
 		Metadata:          jetbrainsConfig.DefaultLicenseConfig.DefaultMetadata,
 		Hash:              jetbrainsConfig.DefaultLicenseConfig.DefaultHash,
 		GracePeriodDays:   jetbrainsConfig.DefaultLicenseConfig.DefaultGracePeriod,
@@ -159,7 +160,7 @@ func (g *LicenseGenerator) getCodesFromDatabase() []string {
 // buildProducts creates product entries
 func (g *LicenseGenerator) buildProducts(codes []string, effectiveDate string) []types.Product {
 	var products []types.Product
-	
+
 	for _, code := range codes {
 		products = append(products, types.Product{
 			Code:         code,
@@ -168,7 +169,7 @@ func (g *LicenseGenerator) buildProducts(codes []string, effectiveDate string) [
 			Extended:     true,
 		})
 	}
-	
+
 	return products
 }
 
@@ -260,7 +261,7 @@ func (g *LicenseGenerator) generatePowerConfig() string {
 	}
 
 	codePower := util.GeneratePowerResult(g.fakeCert.CodeCert, g.fakeCert.CodeRootCert)
-	
+
 	return fmt.Sprintf("[Result]\n; Lemon active by code\n%s", codePower)
 }
 

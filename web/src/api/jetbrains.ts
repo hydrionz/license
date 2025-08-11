@@ -1,5 +1,5 @@
 import api from './config';
-import { JetBrainsLicense } from '../types';
+import { JetBrainsLicense, ApiResponse } from '../types';
 
 /**
  * 生成JetBrains激活码
@@ -11,14 +11,14 @@ export const generateLicense = async (
   licenseeName?: string, 
   effectiveDate?: string,
   codes?: string
-): Promise<JetBrainsLicense> => {
+): Promise<ApiResponse<JetBrainsLicense>> => {
   const params: any = {};
   
   if (licenseeName) params.licenseeName = licenseeName;
   if (effectiveDate) params.effectiveDate = effectiveDate;
   if (codes) params.codes = codes;
   
-  return api.get<JetBrainsLicense>('/jetbrains/generate', {params: params});
+  return api.get<ApiResponse<JetBrainsLicense>>('/jetbrains/generate', {params: params});
 };
 
 /**

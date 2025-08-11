@@ -4,21 +4,17 @@ import "time"
 
 // LicensePart represents the license information structure
 type LicensePart struct {
-	LicenseID          string    `json:"licenseId"`
-	LicenseeName       string    `json:"licenseeName"`
-	LicenseeType       string    `json:"licenseeType,omitempty"`
-	AssigneeName       string    `json:"assigneeName,omitempty"`
-	AssigneeEmail      string    `json:"assigneeEmail,omitempty"`
-	LicenseRestriction string    `json:"licenseRestriction,omitempty"`
-	CheckConcurrentUse bool      `json:"checkConcurrentUse"`
-	Products           []Product `json:"products"`
-	Metadata           string    `json:"metadata"`
-	Hash               string    `json:"hash"`
-	GracePeriodDays    int       `json:"gracePeriodDays"`
-	AutoProlongated    bool      `json:"autoProlongated"`
-	IsAutoProlongated  bool      `json:"isAutoProlongated"`
-	Trial              bool      `json:"trial"`
-	AiAllowed          bool      `json:"aiAllowed"`
+	LicenseID         string    `json:"licenseId"`
+	LicenseeName      string    `json:"licenseeName"`
+	Products          []Product `json:"products"`
+	AssigneeName      string    `json:"assigneeName"`
+	Metadata          string    `json:"metadata"`
+	Hash              string    `json:"hash"`
+	GracePeriodDays   int       `json:"gracePeriodDays"`
+	AutoProlongated   bool      `json:"autoProlongated"`
+	IsAutoProlongated bool      `json:"isAutoProlongated"`
+	Trial             bool      `json:"trial"`
+	AiAllowed         bool      `json:"aiAllowed"`
 }
 
 // Product represents a JetBrains product license entry

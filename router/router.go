@@ -1,7 +1,6 @@
 package router
 
 import (
-	"github.com/gin-gonic/gin"
 	finalshell "license/finalshell/api"
 	gitlab "license/gitlab/api"
 	jetbrainCode "license/jetbrains/api"
@@ -11,6 +10,8 @@ import (
 	rpc "license/rpc/controller"
 	"license/server"
 	"strings"
+
+	"github.com/gin-gonic/gin"
 )
 
 // List of API path prefixes
@@ -81,63 +82,38 @@ func SetupRouter(r *gin.RouterGroup) {
 		rpcGroup.GET("/releaseTicket.action", rpcApi.ReleaseTicket)
 	}
 
-	// jrebel - 使用优化版本
-	jrebelLeasesApi := jrebel.NewLeasesController()  // 原始版本备用
+	// jrebel
+	jrebelLeasesApi, _ := jrebel.NewLeasesController()
 	jrebelIndexApi := jrebel.NewIndexController()
-	
-	// 创建优化版控制器
-	optimizedJrebelApi, err := jrebel.NewOptimizedLeasesController()
-	var useOptimized bool
-	if err != nil {
-		// 如果优化版本初始化失败，回退到原始版本
-		useOptimized = false
-	} else {
-		useOptimized = true
-	}
-	
+
 	jrebelGroup := r.Group("/jrebel")
 	{
 		jrebelGroup.GET("/", jrebelIndexApi.IndexHandler)
-		
-		if useOptimized {
-			// 使用优化版本
-			jrebelGroup.DELETE("/leases/1", optimizedJrebelApi.OptimizedLeases1Handler)
-			jrebelGroup.POST("/leases", optimizedJrebelApi.OptimizedLeasesHandler)
-			jrebelGroup.POST("/validate-connection", optimizedJrebelApi.OptimizedValidateHandler)
-			jrebelGroup.POST("/features", optimizedJrebelApi.OptimizedValidateHandler)
-			jrebelGroup.GET("/features", optimizedJrebelApi.OptimizedValidateHandler)
-			// 优化版本专有端点
-			jrebelGroup.GET("/performance-stats", optimizedJrebelApi.GetPerformanceStats)
-			jrebelGroup.POST("/clear-cache", optimizedJrebelApi.ClearCache)
-		} else {
-			// 回退到原始版本
-			jrebelGroup.DELETE("/leases/1", jrebelLeasesApi.Leases1Handler)
-			jrebelGroup.POST("/leases", jrebelLeasesApi.LeasesHandler)
-			jrebelGroup.POST("/validate-connection", jrebelLeasesApi.ValidateHandler)
-			jrebelGroup.POST("/features", jrebelLeasesApi.ValidateHandler)
-			jrebelGroup.GET("/features", jrebelLeasesApi.ValidateHandler)
-		}
-		
+
+		// 使用优化版本（现在是默认版本）
+		jrebelGroup.DELETE("/leases/1", jrebelLeasesApi.Leases1Handler)
+		jrebelGroup.POST("/leases", jrebelLeasesApi.LeasesHandler)
+		jrebelGroup.POST("/validate-connection", jrebelLeasesApi.ValidateHandler)
+		jrebelGroup.POST("/features", jrebelLeasesApi.ValidateHandler)
+		jrebelGroup.GET("/features", jrebelLeasesApi.ValidateHandler)
+		// 优化版本专有端点
+		jrebelGroup.GET("/performance-stats", jrebelLeasesApi.GetPerformanceStats)
+		jrebelGroup.POST("/clear-cache", jrebelLeasesApi.ClearCache)
+		jrebelGroup.GET("/health", jrebelLeasesApi.HealthCheck)
+		jrebelGroup.POST("/force-gc", jrebelLeasesApi.ForceGC)
+
 		jrebelGroup.POST("/leases/1", func(c *gin.Context) {
 			c.Status(405)
 		})
 	}
 	jrebelAgentGroup := r.Group("/agent")
 	{
-		if useOptimized {
-			jrebelAgentGroup.DELETE("/leases/1", optimizedJrebelApi.OptimizedLeases1Handler)
-			jrebelAgentGroup.POST("/leases", optimizedJrebelApi.OptimizedLeasesHandler)
-			jrebelAgentGroup.POST("/validate-connection", optimizedJrebelApi.OptimizedValidateHandler)
-			jrebelAgentGroup.POST("/features", optimizedJrebelApi.OptimizedValidateHandler)
-			jrebelAgentGroup.GET("/features", optimizedJrebelApi.OptimizedValidateHandler)
-		} else {
-			jrebelAgentGroup.DELETE("/leases/1", jrebelLeasesApi.Leases1Handler)
-			jrebelAgentGroup.POST("/leases", jrebelLeasesApi.LeasesHandler)
-			jrebelAgentGroup.POST("/validate-connection", jrebelLeasesApi.ValidateHandler)
-			jrebelAgentGroup.POST("/features", jrebelLeasesApi.ValidateHandler)
-			jrebelAgentGroup.GET("/features", jrebelLeasesApi.ValidateHandler)
-		}
-		
+		jrebelAgentGroup.DELETE("/leases/1", jrebelLeasesApi.Leases1Handler)
+		jrebelAgentGroup.POST("/leases", jrebelLeasesApi.LeasesHandler)
+		jrebelAgentGroup.POST("/validate-connection", jrebelLeasesApi.ValidateHandler)
+		jrebelAgentGroup.POST("/features", jrebelLeasesApi.ValidateHandler)
+		jrebelAgentGroup.GET("/features", jrebelLeasesApi.ValidateHandler)
+
 		jrebelAgentGroup.POST("/leases/1", func(c *gin.Context) {
 			c.Status(405)
 		})
@@ -167,20 +143,20 @@ func SetupRouter(r *gin.RouterGroup) {
 		// License generation
 		jetbrainsGroup.GET("/generate", jetbrainsCodeApi.GenerateLicense)
 		jetbrainsGroup.POST("/generate", jetbrainsCodeApi.GenerateLicense)
-		
+
 		// Power config
 		jetbrainsGroup.GET("/licenseServerRule", jetbrainsServerApi.LicenseServerRule)
 		jetbrainsGroup.GET("/powerConfig", jetbrainsCodeApi.GetPowerConfig)
-		
+
 		// Product and plugin management
 		jetbrainsGroup.GET("/products", jetbrainsCodeApi.GetProducts)
 		jetbrainsGroup.GET("/products/fetchLatest", jetbrainsCodeApi.FetchProductsLatest)
 		jetbrainsGroup.GET("/plugins", jetbrainsCodeApi.GetPlugins)
 		jetbrainsGroup.GET("/plugins/fetchLatest", jetbrainsCodeApi.FetchPluginsLatest)
-		
+
 		// Health check
 		jetbrainsGroup.GET("/health", jetbrainsCodeApi.HealthCheck)
-		
+
 		// Backward compatibility
 		jetbrainsGroup.GET("/product/fetchLatest", jetbrainsCodeApi.FetchProductsLatest)
 		jetbrainsGroup.GET("/plugin/fetchLatest", jetbrainsCodeApi.FetchPluginsLatest)

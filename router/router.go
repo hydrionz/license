@@ -132,6 +132,11 @@ func SetupRouter(r *gin.RouterGroup) {
 
 			mobaxtermApi.FetchVersions(c)
 		})
+		// 优化版本专有端点
+		mobaxtermGroup.GET("/performance-stats", mobaxtermApi.GetPerformanceStats)
+		mobaxtermGroup.POST("/clear-cache", mobaxtermApi.ClearCache)
+		mobaxtermGroup.GET("/health", mobaxtermApi.HealthCheck)
+		mobaxtermGroup.POST("/force-gc", mobaxtermApi.ForceGC)
 	}
 
 	// jetbrains

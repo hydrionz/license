@@ -155,7 +155,6 @@ const JetBrains: React.FC = () => {
   const { notification } = App.useApp();
   const [loading, setLoading] = useState(false);
   const [license, setLicense] = useState<JetBrainsLicense | null>(null);
-  const [rawResponse, setRawResponse] = useState<string | null>(null);
   const [serverRule, setServerRule] = useState<string>('');
   const [loadingServerRule, setLoadingServerRule] = useState(false);
   const [activationMethod, setActivationMethod] = useState<'code' | 'server'>('code');
@@ -184,7 +183,6 @@ const JetBrains: React.FC = () => {
     if (previousMethodRef.current !== activationMethod) {
       // Clear license results
       setLicense(null);
-      setRawResponse(null);
       
       // Reset the form fields
       codeForm.resetFields();
@@ -248,7 +246,6 @@ const JetBrains: React.FC = () => {
           expiresAt: data.expiresAt || '',
           generatedAt: data.generatedAt || ''
         });
-        setRawResponse(null);
       } else {
         console.error('Unexpected response format:', response);
       }

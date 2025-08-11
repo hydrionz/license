@@ -6,7 +6,7 @@ module.exports = function(app) {
     createProxyMiddleware({
       target: 'http://localhost:15000',
       changeOrigin: true,
-      ws: true,
+      ws: false, // 禁用WebSocket代理
       pathRewrite: {
         '^/api': '', // 将 /api 替换为空字符串
       },

@@ -318,7 +318,7 @@ const MainLayout: React.FC = () => {
         placement="left"
         onClose={() => setMobileOpen(false)}
         open={mobileOpen}
-        bodyStyle={{ padding: 0 }}
+        styles={{ body: { padding: 0 } }}
       >
         <Menu 
           mode="inline" 

@@ -11,6 +11,7 @@ import (
 	"math/rand"
 	"net/http"
 	"sync"
+	"sync/atomic"
 	"time"
 )
 
@@ -174,8 +175,24 @@ const (
 	pluginsBaseURL  = "https://plugins.jetbrains.com/api/searchPlugins?excludeTags=theme&max=24&offset=%d&orderBy=downloads&pricingModels=%s"
 	pluginDetailURL = "https://plugins.jetbrains.com/api/plugins/"
 	maxPerPage      = 24
-	userAgent       = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3"
 )
+
+var userAgents = []string{
+	"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+	"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36",
+	"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+	"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.2 Safari/605.1.15",
+	"Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:133.0) Gecko/20100101 Firefox/133.0",
+	"Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:133.0) Gecko/20100101 Firefox/133.0",
+	"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+	"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Edge/131.0.0.0",
+	"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0.0.0 Safari/537.36",
+	"Mozilla/5.0 (X11; Linux x86_64; rv:132.0) Gecko/20100101 Firefox/132.0",
+}
+
+func getUserAgent() string {
+	return userAgents[rand.Intn(len(userAgents))]
+}
 
 // GetByCode retrieves a plugin by its code
 func (s *PluginService) GetByCode(code string) (*entity.PluginEntity, error) {
@@ -216,7 +233,7 @@ func (s *PluginService) fetchPlugins(pricingModel string) ([]*entity.PluginEntit
 			return nil, err
 		}
 
-		req.Header.Set("User-Agent", userAgent)
+		req.Header.Set("User-Agent", getUserAgent())
 		resp, err := client.Do(req)
 		if err != nil {
 			logger.Error("Error on request:", err)
@@ -270,52 +287,91 @@ func (s *PluginService) fetchPlugins(pricingModel string) ([]*entity.PluginEntit
 		offset += maxPerPage
 	}
 
-	// Phase 2: Fetch details for each plugin
+	// Phase 2: Fetch details concurrently using worker pool
+	const maxWorkers = 10
+	pluginCh := make(chan pluginInfo, len(allPluginInfos))
+	resultCh := make(chan *entity.PluginEntity, len(allPluginInfos))
+
+	// Send all plugin infos to workers
+	for _, p := range allPluginInfos {
+		pluginCh <- p
+	}
+	close(pluginCh)
+
+	var wg sync.WaitGroup
+	processed := &atomic.Int64{}
+
+	// Start worker pool
+	for i := 0; i < maxWorkers; i++ {
+		wg.Add(1)
+		go func(workerID int) {
+			defer wg.Done()
+			for p := range pluginCh {
+				count := processed.Add(1)
+				logger.Info(fmt.Sprintf("Total plugins to process: %d, currently processing #%d, Plugin ID: %d", len(allPluginInfos), count, p.ID))
+
+				detailReq, err := http.NewRequest("GET", fmt.Sprintf("%s%d", pluginDetailURL, p.ID), nil)
+				if err != nil {
+					logger.Error(fmt.Sprintf("Error creating detail request for ID %d", p.ID), err)
+					continue
+				}
+				detailReq.Header.Set("User-Agent", getUserAgent())
+
+				detailResp, err := client.Do(detailReq)
+				if err != nil {
+					logger.Error(fmt.Sprintf("Error fetching plugin detail for ID %d", p.ID), err)
+					continue
+				}
+
+				if detailResp.StatusCode != http.StatusOK {
+					detailResp.Body.Close()
+					logger.Error(fmt.Sprintf("Failed to fetch plugin detail for ID %d, status: %d", p.ID, detailResp.StatusCode), nil)
+					continue
+				}
+
+				detailBody, err := io.ReadAll(detailResp.Body)
+				detailResp.Body.Close()
+				if err != nil {
+					logger.Error("Error reading plugin detail response:", err)
+					continue
+				}
+
+				var detail struct {
+					Name         string `json:"name"`
+					PurchaseInfo struct {
+						ProductCode string `json:"productCode"`
+					} `json:"purchaseInfo"`
+				}
+
+				err = json.Unmarshal(detailBody, &detail)
+				if err != nil {
+					logger.Error("Error unmarshaling plugin detail JSON:", err)
+					continue
+				}
+
+				resultCh <- &entity.PluginEntity{
+					PluginID:        p.ID,
+					PluginName:      detail.Name,
+					PluginCode:      detail.PurchaseInfo.ProductCode,
+					PluginApiDetail: string(detailBody),
+				}
+
+				// Reduced pause for rate limiting
+				time.Sleep(time.Duration(50+rand.Intn(100)) * time.Millisecond)
+			}
+		}(i)
+	}
+
+	// Close result channel when all workers finish
+	go func() {
+		wg.Wait()
+		close(resultCh)
+	}()
+
+	// Collect results
 	allPlugins := make([]*entity.PluginEntity, 0, len(allPluginInfos))
-	for index, p := range allPluginInfos {
-		logger.Info(fmt.Sprintf("Total plugins to process: %d, currently processing #%d, Plugin ID: %d", len(allPluginInfos), index+1, p.ID))
-
-		detailResp, err := client.Get(fmt.Sprintf("%s%d", pluginDetailURL, p.ID))
-		if err != nil {
-			logger.Error(fmt.Sprintf("Error fetching plugin detail for ID %d", p.ID), err)
-			continue
-		}
-
-		if detailResp.StatusCode != http.StatusOK {
-			detailResp.Body.Close()
-			logger.Error(fmt.Sprintf("Failed to fetch plugin detail for ID %d, status: %d", p.ID, detailResp.StatusCode), nil)
-			continue
-		}
-
-		detailBody, err := io.ReadAll(detailResp.Body)
-		detailResp.Body.Close()
-		if err != nil {
-			logger.Error("Error reading plugin detail response:", err)
-			continue
-		}
-
-		var detail struct {
-			Name         string `json:"name"`
-			PurchaseInfo struct {
-				ProductCode string `json:"productCode"`
-			} `json:"purchaseInfo"`
-		}
-
-		err = json.Unmarshal(detailBody, &detail)
-		if err != nil {
-			logger.Error("Error unmarshaling plugin detail JSON:", err)
-			continue
-		}
-
-		allPlugins = append(allPlugins, &entity.PluginEntity{
-			PluginID:        p.ID,
-			PluginName:      detail.Name,
-			PluginCode:      detail.PurchaseInfo.ProductCode,
-			PluginApiDetail: string(detailBody),
-		})
-
-		// Simulate pause
-		time.Sleep(time.Duration(100+rand.Intn(400)) * time.Millisecond)
+	for plugin := range resultCh {
+		allPlugins = append(allPlugins, plugin)
 	}
 
 	return allPlugins, nil

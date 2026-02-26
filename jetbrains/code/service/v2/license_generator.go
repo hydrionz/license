@@ -53,7 +53,10 @@ func (g *LicenseGenerator) GenerateLicense(req types.GenerateLicenseRequest) (*t
 	}
 
 	// Get product codes
-	codes := g.getProductCodes(req.Codes)
+	codes, err := g.getProductCodes(req.Codes)
+	if err != nil {
+		return nil, err
+	}
 	if len(codes) == 0 {
 		return nil, fmt.Errorf("no product codes available")
 	}
@@ -103,23 +106,38 @@ func (g *LicenseGenerator) GenerateLicense(req types.GenerateLicenseRequest) (*t
 }
 
 // getProductCodes retrieves and merges product codes
-func (g *LicenseGenerator) getProductCodes(requestedCodes []string) []string {
-	var allCodes []string
+func (g *LicenseGenerator) getProductCodes(requestedCodes []string) ([]string, error) {
+	// Build valid codes from database and default config
+	var validCodes []string
+	dbCodes := g.getCodesFromDatabase()
+	validCodes = append(validCodes, dbCodes...)
+	validCodes = append(validCodes, jetbrainsConfig.DefaultProductCodes...)
+	validCodes = jetbrainsConfig.MergeProductCodes(validCodes)
 
-	// Add requested codes
-	if len(requestedCodes) > 0 {
-		allCodes = append(allCodes, requestedCodes...)
+	// If no requested codes, return all valid codes
+	if len(requestedCodes) == 0 {
+		return validCodes, nil
 	}
 
-	// Add codes from database
-	dbCodes := g.getCodesFromDatabase()
-	allCodes = append(allCodes, dbCodes...)
+	// Filter requested codes against valid codes
+	validSet := make(map[string]bool, len(validCodes))
+	for _, code := range validCodes {
+		validSet[code] = true
+	}
 
-	// Add default product codes
-	allCodes = append(allCodes, jetbrainsConfig.DefaultProductCodes...)
+	var filtered []string
+	for _, code := range requestedCodes {
+		if validSet[code] {
+			filtered = append(filtered, code)
+		}
+	}
 
-	// Remove duplicates
-	return jetbrainsConfig.MergeProductCodes(allCodes)
+	if len(filtered) == 0 {
+		logger.Info(fmt.Sprintf("none of the requested product codes are valid: %v", requestedCodes))
+		return nil, fmt.Errorf("none of the requested product codes are valid: %v", requestedCodes)
+	}
+
+	return filtered, nil
 }
 
 // getCodesFromDatabase retrieves codes from database

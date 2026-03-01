@@ -5,6 +5,8 @@ import type {Dayjs} from 'dayjs';
 import dayjs from 'dayjs';
 import 'dayjs/locale/zh-cn';
 import 'dayjs/locale/en';
+import zhCNDatePickerLocale from 'antd/es/date-picker/locale/zh_CN';
+import enUSDatePickerLocale from 'antd/es/date-picker/locale/en_US';
 import {CheckOutlined, CopyOutlined, InfoCircleOutlined, LoadingOutlined} from '@ant-design/icons';
 import {useTranslation} from 'react-i18next';
 import PageHeader from '../components/PageHeader';
@@ -234,21 +236,15 @@ const JetBrains: React.FC = () => {
         values.codes
       );
 
-      // Handle new JSON response format
-      if (response && response.code === 200 && response.data) {
-        const { data } = response;
-        setLicense({
-          code: data.activationCode || '',
-          product: values.codes?.split(',')[0] || t('jetbrains.unknownProduct'),
-          activationCode: data.activationCode || '',
-          powerConfig: data.powerConfig || '',
-          licenseId: data.licenseId || '',
-          expiresAt: data.expiresAt || '',
-          generatedAt: data.generatedAt || ''
-        });
-      } else {
-        console.error('Unexpected response format:', response);
-      }
+      setLicense({
+        code: response.activationCode || '',
+        product: values.codes?.split(',')[0] || t('jetbrains.unknownProduct'),
+        activationCode: response.activationCode || '',
+        powerConfig: response.powerConfig || '',
+        licenseId: response.licenseId || '',
+        expiresAt: response.expiresAt || '',
+        generatedAt: response.generatedAt || ''
+      });
     } catch (error) {
       console.error(`${t('jetbrains.licenseGenerationError')}:`, error);
     } finally {
@@ -364,10 +360,7 @@ const JetBrains: React.FC = () => {
                 format="YYYY-MM-DD HH:mm:ss"
                 disabledDate={disablePastDates}
                 showNow={false}
-                locale={i18n.language.startsWith('zh') ? 
-                  require('antd/es/date-picker/locale/zh_CN').default : 
-                  require('antd/es/date-picker/locale/en_US').default
-                }
+                locale={i18n.language.startsWith('zh') ? zhCNDatePickerLocale : enUSDatePickerLocale}
               />
             </Form.Item>
             

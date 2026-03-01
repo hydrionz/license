@@ -6,7 +6,7 @@ import reportWebVitals from './reportWebVitals';
 import './i18n';
 
 // 在生产环境下禁用所有控制台日志
-if (process.env.NODE_ENV === 'production') {
+if (import.meta.env.PROD) {
   // 保存原始控制台方法的引用，以便必要时可以恢复
   const originalConsole = {
     log: console.log,

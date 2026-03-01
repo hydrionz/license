@@ -1,6 +1,6 @@
 # 许可证管理服务前端
 
-这是许可证管理服务的前端项目，基于React开发，提供各类软件的激活码生成界面。
+这是许可证管理服务的前端项目，基于 React + Vite 开发，提供各类软件的激活码生成界面。
 
 ## 功能特点
 
@@ -16,12 +16,13 @@
 
 ## 技术栈
 
-- React 18
+- React 19
 - TypeScript
 - React Router
 - Ant Design
 - Styled Components
 - Axios
+- Vite
 - Node.js 22.14.0+
 - npm 10.9.0+
 
@@ -69,26 +70,37 @@ src/
 
 ## API代理配置
 
-开发环境下，API请求会通过代理转发到后端服务。代理配置在 `src/setupProxy.js` 文件中：
+开发环境下，API 请求会通过 Vite 代理转发到后端服务。代理配置在 `vite.config.ts` 文件中：
 
-```js
-const { createProxyMiddleware } = require('http-proxy-middleware');
+```ts
+import { defineConfig, loadEnv } from 'vite';
 
-module.exports = function(app) {
-  app.use(
-    '/api',
-    createProxyMiddleware({
-      target: 'http://localhost:8080',
-      changeOrigin: true,
-      pathRewrite: {
-        '^/api': '',
+export default defineConfig(({ mode }) => {
+  const env = loadEnv(mode, process.cwd(), '');
+  const target = env.VITE_API_PROXY_TARGET || `http://localhost:${env.HTTP_PORT || '15000'}`;
+
+  return {
+    server: {
+      proxy: {
+        '/api': {
+          target,
+          changeOrigin: true,
+        },
       },
-    })
-  );
-};
+    },
+  };
+});
 ```
 
-如需修改后端服务地址，请更新 `target` 配置。
+注意：
+
+- 代理会保留 `/api` 前缀，不做路径重写。
+- 默认后端地址是 `http://localhost:15000`（可通过 `HTTP_PORT` 或 `VITE_API_PROXY_TARGET` 覆盖）。
+- 你可以通过环境变量 `VITE_API_PROXY_TARGET` 覆盖目标地址，例如：
+
+```bash
+VITE_API_PROXY_TARGET=http://localhost:14000 npm start
+```
 
 ## 部署
 

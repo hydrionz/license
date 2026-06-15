@@ -19,13 +19,13 @@ export const generateLicense = async (
   effectiveDate?: string,
   codes?: string
 ): Promise<JetBrainsGenerateResponse> => {
-  const params: any = {};
-  
-  if (licenseeName) params.licenseeName = licenseeName;
-  if (effectiveDate) params.effectiveDate = effectiveDate;
-  if (codes) params.codes = codes;
-  
-  return api.get<JetBrainsGenerateResponse>('/jetbrains/generate', {params: params});
+  const body: Record<string, string> = {};
+
+  if (licenseeName) body.licenseeName = licenseeName;
+  if (effectiveDate) body.effectiveDate = effectiveDate;
+  if (codes) body.codes = codes;
+
+  return api.post<JetBrainsGenerateResponse>('/jetbrains/generate', body);
 };
 
 /**

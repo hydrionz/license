@@ -7,7 +7,6 @@ import (
 	"io"
 	"license/internal/config"
 	"license/internal/jetbrains/code/entity"
-	"license/internal/jetbrains/code/mapper"
 	"license/internal/logger"
 	"math/rand"
 	"net"
@@ -19,6 +18,7 @@ import (
 	"time"
 
 	"golang.org/x/net/proxy"
+	"gorm.io/gorm/clause"
 )
 
 // getHTTPClient returns an HTTP client with proxy support from config
@@ -82,34 +82,48 @@ func getOrNone(s string) string {
 
 // ProductService handles product-related operations.
 //
-// The service is stateless: the underlying mapper is backed by GORM, which is
-// safe for concurrent use, so no lock is needed. An earlier RWMutex here caused
-// all reads to block while FetchLatest held the write lock for the duration of
-// a multi-minute HTTP scrape.
-type ProductService struct {
-	mapper mapper.ProductMapper
-}
+// GORM is safe for concurrent use, so the service holds no state and no lock —
+// an earlier RWMutex caused all reads to block while FetchLatest held the write
+// lock for the duration of a multi-minute HTTP scrape.
+type ProductService struct{}
 
 // NewProductService creates a new product service
 func NewProductService() *ProductService {
-	return &ProductService{
-		mapper: &mapper.GormProductMapper{},
+	return &ProductService{}
+}
+
+func listProducts() ([]entity.ProductEntity, error) {
+	var products []entity.ProductEntity
+	if err := config.DB.Find(&products).Error; err != nil {
+		logger.Error("Failed to fetch products:", err)
+		return nil, err
 	}
+	return products, nil
+}
+
+func upsertProducts(products []*entity.ProductEntity) error {
+	err := config.DB.Clauses(clause.OnConflict{
+		Columns:   []clause.Column{{Name: "product_code"}},
+		DoUpdates: clause.AssignmentColumns([]string{"product_name", "product_detail"}),
+	}).CreateInBatches(products, 100).Error
+	if err != nil {
+		logger.Error("Failed to upsert products:", err)
+	}
+	return err
 }
 
 // GetAll retrieves all products
 func (s *ProductService) GetAll() ([]entity.ProductEntity, error) {
-	products, err := s.mapper.List()
+	products, err := listProducts()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get products: %w", err)
 	}
-
 	return products, nil
 }
 
 // GetByCode retrieves a product by its code
 func (s *ProductService) GetByCode(code string) (*entity.ProductEntity, error) {
-	products, err := s.mapper.List()
+	products, err := listProducts()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get products: %w", err)
 	}
@@ -174,7 +188,7 @@ func (s *ProductService) FetchLatest() error {
 	}
 
 	if len(productList) > 0 {
-		if err := s.mapper.UpsertBatch(productList); err != nil {
+		if err := upsertProducts(productList); err != nil {
 			return err
 		}
 	}
@@ -184,24 +198,39 @@ func (s *ProductService) FetchLatest() error {
 
 // PluginService handles plugin-related operations.
 // See ProductService for why no lock is held.
-type PluginService struct {
-	mapper mapper.PluginMapper
-}
+type PluginService struct{}
 
 // NewPluginService creates a new plugin service
 func NewPluginService() *PluginService {
-	return &PluginService{
-		mapper: &mapper.GormPluginMapper{},
+	return &PluginService{}
+}
+
+func listPlugins() ([]entity.PluginEntity, error) {
+	var plugins []entity.PluginEntity
+	if err := config.DB.Find(&plugins).Error; err != nil {
+		logger.Error("Failed to fetch plugins:", err)
+		return nil, err
 	}
+	return plugins, nil
+}
+
+func upsertPlugins(plugins []*entity.PluginEntity) error {
+	err := config.DB.Clauses(clause.OnConflict{
+		Columns:   []clause.Column{{Name: "plugin_code"}},
+		DoUpdates: clause.AssignmentColumns([]string{"plugin_id", "plugin_name", "plugin_api_detail"}),
+	}).CreateInBatches(plugins, 100).Error
+	if err != nil {
+		logger.Error("Failed to upsert plugins:", err)
+	}
+	return err
 }
 
 // GetAll retrieves all plugins
 func (s *PluginService) GetAll() ([]entity.PluginEntity, error) {
-	plugins, err := s.mapper.List()
+	plugins, err := listPlugins()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get plugins: %w", err)
 	}
-
 	return plugins, nil
 }
 
@@ -230,7 +259,7 @@ func getUserAgent() string {
 
 // GetByCode retrieves a plugin by its code
 func (s *PluginService) GetByCode(code string) (*entity.PluginEntity, error) {
-	plugins, err := s.mapper.List()
+	plugins, err := listPlugins()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get plugins: %w", err)
 	}
@@ -429,7 +458,7 @@ func (s *PluginService) FetchLatest() error {
 
 	// Upsert plugins (insert new, update existing)
 	if len(allPlugins) > 0 {
-		if err := s.mapper.UpsertBatch(allPlugins); err != nil {
+		if err := upsertPlugins(allPlugins); err != nil {
 			logger.Error("Error upserting plugin batch:", err)
 			return err
 		}

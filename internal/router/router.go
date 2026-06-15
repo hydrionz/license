@@ -6,7 +6,7 @@ import (
 	jetbrainServer "license/internal/jetbrains/code/api/v2"
 	jrebel "license/internal/jrebel/api"
 	mobaxterm "license/internal/mobaxterm/api"
-	rpc "license/internal/rpc/controller"
+	"license/internal/rpc"
 	"license/internal/server"
 
 	"github.com/gin-gonic/gin"
@@ -24,7 +24,7 @@ func SetupExternalRoutes(r *gin.RouterGroup) {
 	}
 
 	// rpc - JetBrains IDE 激活接口
-	rpcApi := rpc.NewRpcController()
+	rpcApi := rpc.NewController()
 	rpcGroup := r.Group("/rpc")
 	{
 		rpcGroup.GET("/ping.action", rpcApi.Ping)

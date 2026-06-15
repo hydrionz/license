@@ -1,23 +1,14 @@
 package util
 
 import (
-	"crypto"
 	"crypto/rand"
 	"crypto/rsa"
-	"crypto/sha1"
-	"crypto/sha512"
 	"crypto/x509"
-	"crypto/x509/pkix"
-	"encoding/base64"
 	"encoding/pem"
 	"fmt"
-	"license/internal/config"
 	"license/internal/logger"
-	"math/big"
 	"os"
-	"path/filepath"
 	"sync"
-	"time"
 )
 
 var (
@@ -25,108 +16,9 @@ var (
 	fakeOnce sync.Once
 )
 
-// GetFake returns the singleton FakeCert instance
-func GetFake() *FakeCert {
-	fakeOnce.Do(func() {
-		fake = &FakeCert{
-			ServerUID: "lemon",
-		}
-	})
-	return fake
-}
-
-// GeneratePowerResult generates power.conf configuration
-func GeneratePowerResult(cert, rootCA *x509.Certificate) string {
-	x := (&big.Int{}).SetBytes(cert.Signature)
-	z := rootCA.PublicKey.(*rsa.PublicKey).N
-	y := rootCA.PublicKey.(*rsa.PublicKey).E
-	r := &big.Int{}
-	r.Exp(x, big.NewInt(int64(y)), cert.PublicKey.(*rsa.PublicKey).N)
-
-	return fmt.Sprintf("EQUAL,%d,%d,%d->%d", x, y, z, r)
-}
-
-func GenerateRootCertificate(key *rsa.PrivateKey, subject, issuer string) ([]byte, error) {
-	serialNumber, err := rand.Int(rand.Reader, new(big.Int).Lsh(big.NewInt(1), 80))
-	if err != nil {
-		return nil, fmt.Errorf("gen serialNumber err %e", err)
-	}
-
-	parent := x509.Certificate{
-		SerialNumber: serialNumber,
-		Subject:      pkix.Name{CommonName: issuer},
-		NotBefore:    time.Now().Add(-24 * time.Hour),
-		NotAfter:     time.Now().AddDate(10, 0, 0),
-		KeyUsage:     x509.KeyUsageKeyEncipherment | x509.KeyUsageDigitalSignature,
-		ExtKeyUsage:  []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth},
-	}
-	template := parent
-	template.Subject = pkix.Name{CommonName: subject}
-
-	certBytes, err := x509.CreateCertificate(rand.Reader, &template, &parent, &key.PublicKey, key)
-	if err != nil {
-		return nil, fmt.Errorf("CreateCertificate err %e", err)
-	}
-	return certBytes, nil
-}
-
-func ReadPemFile(filepath string) ([]byte, error) {
-	certBytes, err := os.ReadFile(filepath)
-	if err != nil {
-		return nil, fmt.Errorf("read file %s err %w", filepath, err)
-	}
-	certBlock, _ := pem.Decode(certBytes)
-	return certBlock.Bytes, nil
-}
-
-func ReadCertFile(filepath string) (*x509.Certificate, error) {
-	pemFile, err := ReadPemFile(filepath)
-	if err != nil {
-		return nil, err
-	}
-	return x509.ParseCertificate(pemFile)
-}
-
-var (
-	CodeRootCertPath   string
-	ServerRootCertPath string
-	PrivateKeyPath     string
-	PublicKeyPath      string
-	CodeCertPath       string
-	ServerCertPath     string
-)
-
-// InitCertPaths initializes certificate paths using certificate manager
-func InitCertPaths(cm interface{}) error {
-	// For backward compatibility, if cm is nil, use old logic
-	if cm == nil {
-		dataDir := config.GetConfig().DataDir
-		CodeRootCertPath = filepath.Join(dataDir, "jetbrainsCodeCACert.pem")
-		ServerRootCertPath = filepath.Join(dataDir, "jetbrainsServerCACert.pem")
-		PrivateKeyPath = filepath.Join(dataDir, "private.pem")
-		PublicKeyPath = filepath.Join(dataDir, "public.pem")
-		CodeCertPath = filepath.Join(dataDir, "code.pem")
-		ServerCertPath = filepath.Join(dataDir, "server.pem")
-		return nil
-	}
-
-	// Use certificate manager paths if available
-	type certManagerInterface interface {
-		GetFilePath(string) string
-	}
-
-	if certMgr, ok := cm.(certManagerInterface); ok {
-		CodeRootCertPath = certMgr.GetFilePath("jetbrains_code_ca")
-		ServerRootCertPath = certMgr.GetFilePath("jetbrains_server_ca")
-		PrivateKeyPath = certMgr.GetFilePath("jetbrains_private_key")
-		PublicKeyPath = certMgr.GetFilePath("jetbrains_public_key")
-		CodeCertPath = certMgr.GetFilePath("jetbrains_code_cert")
-		ServerCertPath = certMgr.GetFilePath("jetbrains_server_cert")
-	}
-
-	return nil
-}
-
+// FakeCert is the in-memory representation of the JetBrains certificate chain
+// we use to sign licenses. It is a singleton (see GetFake) because the chain
+// is process-wide state derived from a single key on disk.
 type FakeCert struct {
 	CodeRootCert   *x509.Certificate
 	ServerRootCert *x509.Certificate
@@ -136,18 +28,32 @@ type FakeCert struct {
 	PublicKey      *rsa.PublicKey
 
 	ServerUID string
+
+	paths Paths
 }
 
-func (c *FakeCert) LoadOrGenerate() error {
-	// ensure paths are initialized
-	if CodeRootCertPath == "" {
-		if err := InitCertPaths(nil); err != nil {
-			return err
+// GetFake returns the singleton FakeCert. Its paths default to the data
+// directory; callers that want to override them (e.g. via a CertManager)
+// should call SetPaths before any Load/Generate method.
+func GetFake() *FakeCert {
+	fakeOnce.Do(func() {
+		fake = &FakeCert{
+			ServerUID: "lemon",
+			paths:     DefaultPaths(),
 		}
-	}
+	})
+	return fake
+}
 
-	var err error
-	pemFile, err := ReadPemFile(PrivateKeyPath)
+// SetPaths overrides the certificate paths. Safe to call once during init,
+// before any Load/Generate method runs.
+func (c *FakeCert) SetPaths(p Paths) {
+	c.paths = p
+}
+
+// LoadOrGenerate loads the RSA key pair from disk, generating it if missing.
+func (c *FakeCert) LoadOrGenerate() error {
+	pemFile, err := ReadPemFile(c.paths.PrivateKey)
 	if err != nil {
 		c.PrivateKey, err = rsa.GenerateKey(rand.Reader, 4096)
 		if err != nil {
@@ -155,7 +61,7 @@ func (c *FakeCert) LoadOrGenerate() error {
 		}
 		pkcs1PrivateKey := x509.MarshalPKCS1PrivateKey(c.PrivateKey)
 		privateKeyPEM := pem.EncodeToMemory(&pem.Block{Type: "RSA PRIVATE KEY", Bytes: pkcs1PrivateKey})
-		if err = os.WriteFile(PrivateKeyPath, privateKeyPEM, 0600); err != nil {
+		if err = os.WriteFile(c.paths.PrivateKey, privateKeyPEM, 0600); err != nil {
 			return fmt.Errorf("failed to write private key: %w", err)
 		}
 	} else {
@@ -165,8 +71,7 @@ func (c *FakeCert) LoadOrGenerate() error {
 		}
 	}
 
-	// Load or generate public key
-	pemFile, err = ReadPemFile(PublicKeyPath)
+	pemFile, err = ReadPemFile(c.paths.PublicKey)
 	if err != nil {
 		logger.Info("Public key not found, generating new key...")
 		pkixPublicKey, err := x509.MarshalPKIXPublicKey(&c.PrivateKey.PublicKey)
@@ -174,7 +79,7 @@ func (c *FakeCert) LoadOrGenerate() error {
 			return fmt.Errorf("failed to marshal public key: %w", err)
 		}
 		publicKeyPEM := pem.EncodeToMemory(&pem.Block{Type: "PUBLIC KEY", Bytes: pkixPublicKey})
-		if err = os.WriteFile(PublicKeyPath, publicKeyPEM, 0600); err != nil {
+		if err = os.WriteFile(c.paths.PublicKey, publicKeyPEM, 0600); err != nil {
 			return fmt.Errorf("failed to write public key: %w", err)
 		}
 		c.PublicKey = &c.PrivateKey.PublicKey
@@ -193,84 +98,51 @@ func (c *FakeCert) LoadOrGenerate() error {
 	return nil
 }
 
+// LoadRootCert loads the JetBrains code/server CA certificates from disk.
 func (c *FakeCert) LoadRootCert() (err error) {
-	// ensure paths are initialized
-	if CodeRootCertPath == "" {
-		if err := InitCertPaths(nil); err != nil {
-			return err
-		}
-	}
-
-	c.CodeRootCert, err = ReadCertFile(CodeRootCertPath)
+	c.CodeRootCert, err = ReadCertFile(c.paths.CodeRootCert)
 	if err != nil {
 		return err
 	}
-	c.ServerRootCert, err = ReadCertFile(ServerRootCertPath)
-	if err != nil {
-		return err
-	}
-	return
+	c.ServerRootCert, err = ReadCertFile(c.paths.ServerRootCert)
+	return err
 }
 
+// LoadCert loads the previously generated leaf code/server certificates.
 func (c *FakeCert) LoadCert() (err error) {
-	// ensure paths are initialized
-	if CodeRootCertPath == "" {
-		if err := InitCertPaths(nil); err != nil {
-			return err
-		}
-	}
-
-	c.CodeCert, err = ReadCertFile(CodeCertPath)
+	c.CodeCert, err = ReadCertFile(c.paths.CodeCert)
 	if err != nil {
 		return err
 	}
-	c.ServerCert, err = ReadCertFile(ServerCertPath)
-	if err != nil {
-		return err
-	}
-	return
+	c.ServerCert, err = ReadCertFile(c.paths.ServerCert)
+	return err
 }
 
-// Check if file exists
-func fileExists(filename string) bool {
-	_, err := os.Stat(filename)
-	if os.IsNotExist(err) {
-		return false
-	}
-	return err == nil
-}
-
+// GenerateRootCert signs new code/server leaf certificates with the private
+// key if they do not already exist on disk.
 func (c *FakeCert) GenerateRootCert() (err error) {
-	// ensure paths are initialized
-	if CodeRootCertPath == "" {
-		if err := InitCertPaths(nil); err != nil {
-			return err
-		}
-	}
-
-	// Check if files exist, generate if they don't
 	logger.Info("GenerateCodeCert")
-	if !fileExists(CodeCertPath) {
+	if !fileExists(c.paths.CodeCert) {
 		jetCert, err := GenerateRootCertificate(c.PrivateKey, "lemon", c.CodeRootCert.Issuer.CommonName)
 		if err != nil {
 			return err
 		}
 		jetCertPEM := pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: jetCert})
-		if err = os.WriteFile(CodeCertPath, jetCertPEM, 0600); err != nil {
+		if err = os.WriteFile(c.paths.CodeCert, jetCertPEM, 0600); err != nil {
 			return err
 		}
 	}
 	logger.Info("GenerateCodeCert done")
 
 	logger.Info("GenerateServerCert")
-	if !fileExists(ServerCertPath) {
+	if !fileExists(c.paths.ServerCert) {
 		subject := fmt.Sprintf("%s.lsrv.jetbrains.com", "lemon")
 		lsCert, err := GenerateRootCertificate(c.PrivateKey, subject, c.ServerRootCert.Issuer.CommonName)
 		if err != nil {
 			return err
 		}
 		lsCertPEM := pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: lsCert})
-		if err = os.WriteFile(ServerCertPath, lsCertPEM, 0600); err != nil {
+		if err = os.WriteFile(c.paths.ServerCert, lsCertPEM, 0600); err != nil {
 			return err
 		}
 	}
@@ -278,30 +150,10 @@ func (c *FakeCert) GenerateRootCert() (err error) {
 	return nil
 }
 
-func (c *FakeCert) SignWithRsaSha1(data []byte) string {
-	hashed := sha1.Sum(data)
-	signature, err := rsa.SignPKCS1v15(rand.Reader, c.PrivateKey, crypto.SHA1, hashed[:])
-	if err != nil {
-		logger.Error("Failed to sign with RSA-SHA1: %v", err)
-		return ""
+func fileExists(filename string) bool {
+	_, err := os.Stat(filename)
+	if os.IsNotExist(err) {
+		return false
 	}
-	return base64.StdEncoding.EncodeToString(signature)
-}
-
-func (c *FakeCert) SignWithRsaSha512(data []byte) string {
-	hashed := sha512.Sum512(data)
-	signature, err := rsa.SignPKCS1v15(rand.Reader, c.PrivateKey, crypto.SHA512, hashed[:])
-	if err != nil {
-		logger.Error("Failed to sign with RSA-SHA512: %v", err)
-		return ""
-	}
-	return base64.StdEncoding.EncodeToString(signature)
-}
-
-func (c *FakeCert) CodeCertRawBase64() string {
-	return base64.StdEncoding.EncodeToString(c.CodeCert.Raw)
-}
-
-func (c *FakeCert) ServerCertRawBase64() string {
-	return base64.StdEncoding.EncodeToString(c.ServerCert.Raw)
+	return err == nil
 }

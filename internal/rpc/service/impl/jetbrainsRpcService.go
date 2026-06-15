@@ -1,7 +1,7 @@
 package impl
 
 import (
-	"license/internal/jetbrains/server/entity"
+	"license/internal/jetbrains/server/protocol"
 	"license/internal/jetbrains/util"
 	"license/internal/rpc/service"
 
@@ -17,12 +17,12 @@ var _ service.RpcService = &JetbrainsRpcService{}
 
 // Ping handles the ping XML request and returns a signed response.
 func (s *JetbrainsRpcService) Ping(ctx *gin.Context, machineId, salt string) {
-	pingReq := &entity.BaseRequest{
+	pingReq := &protocol.BaseRequest{
 		Salt:      salt,
 		MachineId: machineId,
 	}
-	pingResponse := entity.NewPingResponse(pingReq, util.GetFake())
-	ctx.Render(200, entity.NewXMLTicket(pingResponse))
+	pingResponse := protocol.NewPingResponse(pingReq, util.GetFake())
+	ctx.Render(200, protocol.NewXMLTicket(pingResponse))
 }
 
 // ObtainTicket handles the ticket obtaining XML request and returns a signed response.
@@ -30,21 +30,21 @@ func (s *JetbrainsRpcService) ObtainTicket(ctx *gin.Context, username, hostName,
 	if len(username) == 0 {
 		username = hostName
 	}
-	obtainReq := &entity.BaseRequest{
+	obtainReq := &protocol.BaseRequest{
 		Salt:      salt,
 		UserName:  username,
 		MachineId: machineId,
 	}
-	ticketResponse := entity.NewObtainTicketResponse(obtainReq, util.GetFake())
-	ctx.Render(200, entity.NewXMLTicket(ticketResponse))
+	ticketResponse := protocol.NewObtainTicketResponse(obtainReq, util.GetFake())
+	ctx.Render(200, protocol.NewXMLTicket(ticketResponse))
 }
 
 // ReleaseTicket handles the ticket release XML request and returns a signed response.
 func (s *JetbrainsRpcService) ReleaseTicket(ctx *gin.Context, machineId, salt string) {
-	releaseReq := &entity.BaseRequest{
+	releaseReq := &protocol.BaseRequest{
 		Salt:      salt,
 		MachineId: machineId,
 	}
-	releaseTicketResponse := entity.NewReleaseTicketResponse(releaseReq, util.GetFake())
-	ctx.Render(200, entity.NewXMLTicket(releaseTicketResponse))
+	releaseTicketResponse := protocol.NewReleaseTicketResponse(releaseReq, util.GetFake())
+	ctx.Render(200, protocol.NewXMLTicket(releaseTicketResponse))
 }

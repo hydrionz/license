@@ -9,12 +9,10 @@ import (
 func InitJetbrains() error {
 	logger.Info("Initializing JetBrains certificates")
 
-	// Initialize certificate paths for JetBrains
-	if err := util.InitCertPaths(GetCertManager()); err != nil {
-		return err
-	}
-
 	fakeCert := util.GetFake()
+	if cm := GetCertManager(); cm != nil {
+		fakeCert.SetPaths(util.PathsFromCertManager(cm))
+	}
 
 	// Load or generate keys
 	if err := fakeCert.LoadOrGenerate(); err != nil {

@@ -295,7 +295,7 @@ jobs:
           
           # 构建特定平台的二进制文件
           echo "Building for ${{ matrix.os }} ${{ matrix.arch }}..."
-          CGO_ENABLED=0 GOOS=${{ matrix.os }} GOARCH=${{ matrix.arch }} go build -ldflags "-s -w -X license/sys.Version=${{ needs.pre_check.outputs.build_version }} -X license/sys.Build=${{ needs.pre_check.outputs.build }} -X license/sys.OsArch=${{ matrix.os }}/${{ matrix.arch }}" -o build/${{ matrix.binary_name }} ./main.go
+          CGO_ENABLED=0 GOOS=${{ matrix.os }} GOARCH=${{ matrix.arch }} go build -ldflags "-s -w -X license/internal/sys.Version=${{ needs.pre_check.outputs.build_version }} -X license/internal/sys.Build=${{ needs.pre_check.outputs.build }} -X license/internal/sys.OsArch=${{ matrix.os }}/${{ matrix.arch }}" -o build/${{ matrix.binary_name }} ./main.go
           
           # 验证构建结果
           echo "Built binary:"

@@ -19,14 +19,14 @@ echo "Using hash: $BUILD"
 mkdir -p build
 
 # Linux amd64
-CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="-s -w -X license/sys.Version=${VERSION} -X license/sys.Build=${BUILD} -X license/sys.OsArch=linux/amd64" -o build/license-linux-amd64 .
+CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="-s -w -X license/internal/sys.Version=${VERSION} -X license/internal/sys.Build=${BUILD} -X license/internal/sys.OsArch=linux/amd64" -o build/license-linux-amd64 .
 # Linux arm64
-CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build -ldflags="-s -w -X license/sys.Version=${VERSION} -X license/sys.Build=${BUILD} -X license/sys.OsArch=linux/arm64" -o build/license-linux-arm64 .
+CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build -ldflags="-s -w -X license/internal/sys.Version=${VERSION} -X license/internal/sys.Build=${BUILD} -X license/internal/sys.OsArch=linux/arm64" -o build/license-linux-arm64 .
 # macOS amd64
-CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build -ldflags="-s -w -X license/sys.Version=${VERSION} -X license/sys.Build=${BUILD} -X license/sys.OsArch=darwin/amd64" -o build/license-darwin-amd64 .
+CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build -ldflags="-s -w -X license/internal/sys.Version=${VERSION} -X license/internal/sys.Build=${BUILD} -X license/internal/sys.OsArch=darwin/amd64" -o build/license-darwin-amd64 .
 # macOS arm64
-CGO_ENABLED=0 GOOS=darwin GOARCH=arm64 go build -ldflags="-s -w -X license/sys.Version=${VERSION} -X license/sys.Build=${BUILD} -X license/sys.OsArch=darwin/arm64" -o build/license-darwin-arm64 .
+CGO_ENABLED=0 GOOS=darwin GOARCH=arm64 go build -ldflags="-s -w -X license/internal/sys.Version=${VERSION} -X license/internal/sys.Build=${BUILD} -X license/internal/sys.OsArch=darwin/arm64" -o build/license-darwin-arm64 .
 # Windows amd64
-CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -ldflags="-s -w -X license/sys.Version=${VERSION} -X license/sys.Build=${BUILD} -X license/sys.OsArch=windows/amd64" -o build/license-windows-amd64.exe .
+CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -ldflags="-s -w -X license/internal/sys.Version=${VERSION} -X license/internal/sys.Build=${BUILD} -X license/internal/sys.OsArch=windows/amd64" -o build/license-windows-amd64.exe .
 # Windows arm64
-CGO_ENABLED=0 GOOS=windows GOARCH=arm64 go build -ldflags="-s -w -X license/sys.Version=${VERSION} -X license/sys.Build=${BUILD} -X license/sys.OsArch=windows/arm64" -o build/license-windows-arm64.exe .
+CGO_ENABLED=0 GOOS=windows GOARCH=arm64 go build -ldflags="-s -w -X license/internal/sys.Version=${VERSION} -X license/internal/sys.Build=${BUILD} -X license/internal/sys.OsArch=windows/arm64" -o build/license-windows-arm64.exe .

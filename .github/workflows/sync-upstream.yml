@@ -1,0 +1,61 @@
+name: Upstream Sync
+
+on:
+  schedule:
+    - cron: '0 */6 * * *'
+  workflow_dispatch:
+
+jobs:
+  sync_latest_from_upstream:
+    name: Sync latest commits from upstream repo
+    runs-on: ubuntu-latest
+    if: ${{ github.event.repository.fork }}
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: feture-go-v2
+
+      - name: Sync upstream changes
+        id: sync
+        uses: aormsby/Fork-Sync-With-Upstream-action@v3.4
+        with:
+          upstream_sync_repo: nannanStrawberry314/license
+          upstream_sync_branch: feture-go-v2
+          target_sync_branch: feture-go-v2
+          target_repo_token: ${{ secrets.GITHUB_TOKEN }}
+          test_mode: false
+
+      - name: 'Sync check'
+        if: failure()
+        run: |
+          echo "[Error] 由于上游仓库的 workflow 文件变更，导致 GitHub 自动暂停了本次自动更新，你需要手动 Sync Fork 一次。"
+          echo "[Error] Due to a change in the workflow file of the upstream repository, GitHub has automatically suspended the scheduled automatic update. You need to manually sync your fork."
+          exit 1
+
+  sync_latest_tag:
+    name: Sync latest tags from upstream repo
+    runs-on: ubuntu-latest
+    needs: sync_latest_from_upstream
+    if: ${{ github.event.repository.fork }}
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: feture-go-v2
+
+      - name: Configure Git
+        run: |
+          git config --global user.name "GH Action - Upstream Sync"
+          git config --global user.email "action@github.com"
+
+      - name: Add upstream repository
+        run: |
+          git remote add upstream https://github.com/nannanStrawberry314/license.git
+          git fetch upstream --recurse-submodules=no --progress --prune --tags
+
+      - name: Sync tags
+        run: |
+          git push origin --tags

@@ -22,7 +22,6 @@
 go.work
 .idea/
 *.iml
-.env
 *.key
 *.pem
 *.crt
@@ -30,3 +29,11 @@ go.work
 *.pri
 *.db
 *.log
+.DS_Store
+
+*.env
+!.env.example
+
+build
+web/node_modules
+web/build

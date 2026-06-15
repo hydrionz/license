@@ -1,0 +1,551 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"  # 只在推送v开头的tag时触发
+  workflow_dispatch:  # 支持手动触发
+    inputs:
+      version_override:
+        description: 'Override version (leave empty to use git tag)'
+        required: false
+        type: string
+      build_docker:
+        description: 'Build and push Docker images'
+        required: false
+        type: boolean
+        default: false
+      create_release:
+        description: 'Create GitHub release'
+        required: false
+        type: boolean
+        default: false
+
+# 使用concurrency确保同时只有一个工作流运行
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # 0.预检步骤：判断是否继续运行完整工作流
+  pre_check:
+    name: Check Trigger Event
+    runs-on: ubuntu-latest
+    outputs:
+      should_run_full_workflow: ${{ steps.check.outputs.should_run }}
+      is_tag_or_release: ${{ steps.check.outputs.is_tag_or_release }}
+      should_create_release: ${{ steps.check.outputs.should_create_release }}
+      version: ${{ steps.get_version.outputs.version }}
+      build_version: ${{ steps.get_version.outputs.build_version }}
+      docker_version: ${{ steps.get_version.outputs.docker_version }}
+      build: ${{ steps.get_version.outputs.build }}
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Fetch all history for proper versioning
+
+      - name: Determine event type
+        id: check
+        run: |
+          echo "Event name: ${{ github.event_name }}"
+          echo "Ref: ${{ github.ref }}"
+          
+          # 如果是tag推送，则运行完整工作流包括Docker和Release
+          if [[ "${{ github.ref }}" == refs/tags/* ]]; then
+            echo "This is a tag push event - will run full workflow"
+            echo "should_run=true" >> $GITHUB_OUTPUT
+            echo "is_tag_or_release=true" >> $GITHUB_OUTPUT
+            echo "should_create_release=true" >> $GITHUB_OUTPUT
+          # 如果是手动触发且指定构建Docker，则运行完整工作流
+          elif [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            echo "This is a manual trigger - will run full workflow"
+            echo "should_run=true" >> $GITHUB_OUTPUT
+            if [[ "${{ github.event.inputs.build_docker }}" == "true" ]]; then
+              echo "is_tag_or_release=true" >> $GITHUB_OUTPUT
+            else
+              echo "is_tag_or_release=false" >> $GITHUB_OUTPUT
+            fi
+            if [[ "${{ github.event.inputs.create_release }}" == "true" ]]; then
+              echo "should_create_release=true" >> $GITHUB_OUTPUT
+            else
+              echo "should_create_release=false" >> $GITHUB_OUTPUT
+            fi
+          else
+            echo "This is an unexpected event - will not run"
+            echo "should_run=false" >> $GITHUB_OUTPUT
+            echo "is_tag_or_release=false" >> $GITHUB_OUTPUT
+            echo "should_create_release=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Get version
+        id: get_version
+        run: |
+          if [ -n "${{ github.event.inputs.version_override }}" ]; then
+            VERSION="${{ github.event.inputs.version_override }}"
+          elif [[ "${{ github.ref }}" == refs/tags/* ]]; then
+            VERSION="${{ github.ref_name }}"
+          else
+            VERSION=$(git describe --tags --abbrev=0 2>/dev/null || echo "0.0.1")
+          fi
+          
+          # 提取不带v前缀的版本号用于Docker镜像标签
+          PURE_VERSION=$(echo "$VERSION" | sed 's/^v//')
+          
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "build_version=$PURE_VERSION" >> $GITHUB_OUTPUT
+          echo "docker_version=$PURE_VERSION" >> $GITHUB_OUTPUT
+          echo "Using version: $VERSION (Build version: $PURE_VERSION)"
+          echo "Using version: $VERSION (Docker version: $PURE_VERSION)"
+          
+          # 获取当前提交的SHA哈希值
+          BUILD=$(openssl rand -hex 4)
+          echo "build=$BUILD" >> $GITHUB_OUTPUT
+          echo "Using hash: $BUILD"
+
+  # 1.Web前端构建阶段
+  build_web:
+    name: Build Web Frontend
+    runs-on: ubuntu-latest
+    needs: pre_check
+    if: needs.pre_check.outputs.should_run_full_workflow == 'true'
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Fetch all history for proper versioning
+
+      # 设置Node.js环境用于构建前端
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: 'web/package-lock.json'
+
+      # 构建前端
+      - name: Build web frontend
+        run: |
+          echo "Building web frontend..."
+          cd web
+          npm ci
+          # 设置CI=false以避免将ESLint警告视为错误
+          CI=false npm run build
+          cd ..
+          # 验证构建结果
+          echo "Checking web build output:"
+          ls -la web/build/
+          echo "Web frontend built successfully. It will be embedded in the Go binary using //go:embed"
+
+      # 将前端构建产物打包并上传
+      - name: Compress and upload web build artifacts
+        run: |
+          echo "Compressing web build directory..."
+          # 确保保留web/build目录结构
+          tar -czvf web-build.tar.gz web/build/
+          echo "Compressed size:"
+          ls -lh web-build.tar.gz
+          # 验证压缩包内容
+          echo "Verifying archive contents:"
+          tar -tvf web-build.tar.gz | head -10
+
+      - name: Upload web build archive
+        uses: actions/upload-artifact@v4
+        with:
+          name: web-build-archive
+          path: web-build.tar.gz
+          retention-days: 1
+
+  # 2.测试阶段
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    needs: [pre_check, build_web]  # 依赖预检和web构建
+    if: needs.pre_check.outputs.should_run_full_workflow == 'true'
+    steps:
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.24'
+
+      - name: Check out code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Fetch all history for proper versioning
+
+      # 下载web构建产物（如有需要）
+      - name: Download web build archive
+        uses: actions/download-artifact@v4
+        with:
+          name: web-build-archive
+          path: tmp/
+
+      - name: Extract web build if needed for tests
+        run: |
+          # 只有在测试需要web构建产物时才解压
+          if [ -f "tmp/web-build.tar.gz" ]; then
+            echo "Extracting web build for tests..."
+            tar -xzvf tmp/web-build.tar.gz
+            echo "Web build extracted for testing"
+          fi
+
+      - name: Get dependencies
+        run: go mod download
+
+      - name: Run tests
+        run: go test -v ./...
+
+  # 3.并行构建可执行文件
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    needs: [pre_check, build_web, test]  # 依赖预检、web构建和测试
+    if: needs.pre_check.outputs.should_run_full_workflow == 'true'
+    strategy:
+      matrix:
+        include:
+          - os: linux
+            arch: amd64
+            binary_name: license-linux-amd64
+          - os: linux
+            arch: arm64
+            binary_name: license-linux-arm64
+          - os: darwin
+            arch: amd64
+            binary_name: license-darwin-amd64
+          - os: darwin
+            arch: arm64
+            binary_name: license-darwin-arm64
+          - os: windows
+            arch: amd64
+            binary_name: license-windows-amd64.exe
+          - os: windows
+            arch: arm64
+            binary_name: license-windows-arm64.exe
+    steps:
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.24'
+
+      - name: Check out code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Fetch all history for proper versioning
+
+      # 获取依赖
+      - name: Get dependencies
+        run: go mod download
+
+      # 下载并解压前端构建产物
+      - name: Download web build archive
+        uses: actions/download-artifact@v4
+        with:
+          name: web-build-archive
+          path: tmp/
+
+      - name: Extract web build
+        run: |
+          # 检查下载的压缩包
+          echo "Downloaded archive:"
+          ls -la tmp/
+          
+          # 检查压缩包内容
+          echo "Archive contents:"
+          tar -tvf tmp/web-build.tar.gz | head -10
+          
+          # 确保web目录存在
+          mkdir -p web
+          
+          # 提取压缩包到项目根目录
+          echo "Extracting web build archive..."
+          tar -xzvf tmp/web-build.tar.gz
+          
+          # 查看当前目录结构
+          echo "Current directory structure:"
+          find . -type d -name build | head -10
+          
+          # 如果解压后的文件在build/目录下，则移动到web/build/
+          if [ -d "build" ] && [ ! -d "web/build" ]; then
+            echo "Moving build directory to web/build..."
+            mkdir -p web
+            mv build web/
+          fi
+          
+          # 验证解压结果
+          echo "Checking extracted web build:"
+          if [ -d "web/build" ]; then
+            ls -la web/build/
+            echo "Web build successfully extracted and ready for embedding"
+          else
+            echo "ERROR: web/build directory not found!"
+            echo "Current directory structure:"
+            find . -maxdepth 3 -type d
+            exit 1
+          fi
+
+      # 编译二进制文件（并行）
+      - name: Build binary for ${{ matrix.os }}-${{ matrix.arch }}
+        run: |
+          mkdir -p build
+          
+          # 验证web前端构建文件是否存在
+          echo "Checking web frontend build files for embedding into Go binary:"
+          ls -la web/build/
+          
+          # 构建特定平台的二进制文件
+          echo "Building for ${{ matrix.os }} ${{ matrix.arch }}..."
+          CGO_ENABLED=0 GOOS=${{ matrix.os }} GOARCH=${{ matrix.arch }} go build -ldflags "-s -w -X license/internal/sys.Version=${{ needs.pre_check.outputs.build_version }} -X license/internal/sys.Build=${{ needs.pre_check.outputs.build }} -X license/internal/sys.OsArch=${{ matrix.os }}/${{ matrix.arch }}" -o build/${{ matrix.binary_name }} ./main.go
+          
+          # 验证构建结果
+          echo "Built binary:"
+          ls -la build/
+          file build/${{ matrix.binary_name }}
+
+      # 上传当前平台的二进制文件
+      - name: Upload ${{ matrix.os }}-${{ matrix.arch }} binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: binary-${{ matrix.os }}-${{ matrix.arch }}
+          path: build/${{ matrix.binary_name }}
+
+  # 4.合并步骤，将所有二进制文件合并到单个目录
+  collect_binaries:
+    name: Collect Binaries
+    runs-on: ubuntu-latest
+    needs: build
+    if: needs.pre_check.outputs.should_run_full_workflow == 'true'
+    steps:
+      - name: Create output directory
+        run: mkdir -p build
+
+      # 下载所有平台的二进制文件
+      - name: Download all binaries
+        uses: actions/download-artifact@v4
+        with:
+          pattern: binary-*
+          path: ./downloaded
+          merge-multiple: true
+
+      # 将所有二进制文件移动到build目录
+      - name: Organize binaries
+        run: |
+          echo "Downloaded binaries:"
+          find ./downloaded -type f -name "license-*" | sort
+          
+          # 移动所有二进制文件到build目录
+          mkdir -p build
+          cp -v ./downloaded/license-* build/
+          
+          # 验证最终结果
+          echo "Collected binaries:"
+          ls -la build/
+
+      # 上传合并后的二进制文件
+      - name: Upload collected binaries
+        uses: actions/upload-artifact@v4
+        with:
+          name: binaries
+          path: build/*
+
+  # 5.构建Docker镜像（只在tag或手动触发时运行）
+  docker:
+    name: Build and Push Docker image
+    runs-on: ubuntu-latest
+    needs: [pre_check, collect_binaries]
+    if: needs.pre_check.outputs.is_tag_or_release == 'true'
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Fetch all history for proper versioning
+
+      # 下载构建的二进制文件
+      - name: Download binaries
+        uses: actions/download-artifact@v4
+        with:
+          name: binaries
+          path: build
+
+      # 验证下载的二进制文件
+      - name: Verify binaries
+        run: |
+          echo "Downloaded binaries:"
+          ls -la build/
+          echo "These binaries already contain embedded web frontend resources"
+
+      # 准备Docker构建上下文
+      - name: Prepare build context
+        run: |
+          # 创建构建上下文目录
+          mkdir -p docker-context
+          
+          # 检查下载的二进制文件
+          echo "Downloaded binaries:"
+          ls -la build/
+          
+          # 将二进制文件重命名为更简单的形式（删除linux-前缀）
+          mkdir -p docker-context/bin
+          cp build/license-linux-amd64 docker-context/bin/license-amd64
+          cp build/license-linux-arm64 docker-context/bin/license-arm64
+          
+          # 检查复制后的二进制文件
+          echo "Copied binaries:"
+          ls -la docker-context/bin/
+          
+          # 创建Dockerfile，避免使用TARGETARCH变量
+          cat > docker-context/Dockerfile << EOF
+          FROM alpine:latest
+          
+          ARG VERSION=${{ needs.pre_check.outputs.docker_version }}
+          ARG TARGETARCH
+          
+          WORKDIR /app
+          
+          # 调试: 打印目标架构
+          RUN echo "Building for architecture: \${TARGETARCH}"
+          
+          # 复制对应架构的预编译二进制文件（已包含前端资源）
+          COPY bin/license-\${TARGETARCH} /app/license
+          
+          # 基本依赖
+          RUN chmod +x /app/license && \\
+              apk update && \\
+              apk upgrade && \\
+              apk add --no-cache ca-certificates tzdata && \\
+              update-ca-certificates 2>/dev/null || true && \\
+              mkdir -p /data
+          
+          # 验证二进制文件
+          RUN ls -la /app && chmod +x /app/license
+          
+          ENTRYPOINT ["/app/license"]
+          EOF
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        id: buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.HUB_USER }}
+          password: ${{ secrets.HUB_PASS }}
+
+      # 登录到GitHub容器注册表
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up image name
+        run: |
+          DOCKERHUB_IMAGE_NAME="${{ secrets.HUB_USER }}/${{ secrets.HUB_REPO }}"
+          echo "DOCKERHUB_IMAGE_NAME=$DOCKERHUB_IMAGE_NAME" >> $GITHUB_OUTPUT
+          GHCR_IMAGE_NAME=$(echo "ghcr.io/${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
+          echo "GHCR_IMAGE_NAME=$GHCR_IMAGE_NAME" >> $GITHUB_OUTPUT
+        id: image-name
+
+      # 使用buildx一步构建多架构镜像
+      - name: Build and push multi-arch Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: docker-context
+          push: true
+          tags: |
+            ${{ steps.image-name.outputs.DOCKERHUB_IMAGE_NAME }}:${{ needs.pre_check.outputs.docker_version }}
+            ${{ steps.image-name.outputs.DOCKERHUB_IMAGE_NAME }}:latest
+            ${{ steps.image-name.outputs.GHCR_IMAGE_NAME }}:${{ needs.pre_check.outputs.docker_version }}
+            ${{ steps.image-name.outputs.GHCR_IMAGE_NAME }}:latest
+          platforms: linux/amd64,linux/arm64
+          build-args: |
+            VERSION=${{ needs.pre_check.outputs.docker_version }}
+
+  # 6.发布Release（只在tag推送时运行或手动指定创建release时运行）
+  release:
+    name: Publish Release
+    runs-on: ubuntu-latest
+    needs: [pre_check, collect_binaries, docker]
+    if: needs.pre_check.outputs.is_tag_or_release == 'true' && (startsWith(github.ref, 'refs/tags/') || needs.pre_check.outputs.should_create_release == 'true')
+    permissions:
+      contents: write
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Fetch all history for proper versioning
+
+      - name: Download binaries
+        uses: actions/download-artifact@v4
+        with:
+          name: binaries
+          path: build
+
+      - name: Create checksums
+        run: |
+          cd build
+          # 为所有二进制文件创建校验和
+          find . -type f -not -name "checksums.txt" -exec shasum -a 256 {} \; > checksums.txt
+          cat checksums.txt
+
+      - name: Get previous tag
+        id: previoustag
+        run: |
+          # 获取当前标签
+          CURRENT_TAG="${{ needs.pre_check.outputs.version }}"
+          echo "current_tag=$CURRENT_TAG" >> $GITHUB_OUTPUT
+          
+          # 获取上一个标签
+          PREVIOUS_TAG=$(git describe --tags --abbrev=0 $CURRENT_TAG^ 2>/dev/null || echo "")
+          echo "previous_tag=$PREVIOUS_TAG" >> $GITHUB_OUTPUT
+          
+          echo "Current tag: $CURRENT_TAG"
+          echo "Previous tag: $PREVIOUS_TAG"
+
+      - name: Generate Release Body
+        id: release_body
+        run: |
+          CURRENT_TAG="${{ steps.previoustag.outputs.current_tag }}"
+          PREVIOUS_TAG="${{ steps.previoustag.outputs.previous_tag }}"
+          
+          # 移除标题，避免重复
+          echo "## 📝 Changelog" > release_body.md
+          echo "" >> release_body.md
+          
+          if [ -n "$PREVIOUS_TAG" ]; then
+            echo "Full Changelog: [$PREVIOUS_TAG...$CURRENT_TAG](https://github.com/${{ github.repository }}/compare/$PREVIOUS_TAG...$CURRENT_TAG)" >> release_body.md
+            echo "" >> release_body.md
+          
+            # 获取提交日志并分类
+            echo "### 🚀 Features" >> release_body.md
+            git log --pretty=format:"* %s" $PREVIOUS_TAG..$CURRENT_TAG | grep -i "feat\|feature\|新增\|添加" >> release_body.md || echo "* No new features" >> release_body.md
+            echo "" >> release_body.md
+          
+            echo "### 🐛 Bug Fixes" >> release_body.md
+            git log --pretty=format:"* %s" $PREVIOUS_TAG..$CURRENT_TAG | grep -i "fix\|修复\|bug" >> release_body.md || echo "* No bug fixes" >> release_body.md
+            echo "" >> release_body.md
+          
+            echo "### ♻️ Other Changes" >> release_body.md
+            git log --pretty=format:"* %s" $PREVIOUS_TAG..$CURRENT_TAG | grep -v -i "feat\|feature\|fix\|bug\|新增\|添加\|修复" >> release_body.md || echo "* No other changes" >> release_body.md
+          else
+            echo "🎉 First Release" >> release_body.md
+          fi
+
+      - name: Release
+        uses: ncipollo/release-action@v1
+        with:
+          tag: ${{ needs.pre_check.outputs.version }}
+          name: ${{ needs.pre_check.outputs.version }}
+          artifacts: "build/*"
+          allowUpdates: true
+          makeLatest: true
+          replacesArtifacts: true
+          bodyFile: release_body.md

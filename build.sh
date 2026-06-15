@@ -28,15 +28,24 @@ docker buildx create --name $BUILDER_NAME --use || true
 docker buildx use $BUILDER_NAME
 docker buildx inspect --bootstrap
 
-# VERSION
-VERSION=1.4.5
+# VERSION - 获取最新的tag并去除开头的'v'
+VERSION=$(git describe --tags --abbrev=0 2>/dev/null || echo "0.0.1")
+# 如果版本号以'v'开头，则去除这个'v'
+VERSION=$(echo $VERSION | sed 's/^v//')
+echo "Using version: $VERSION"
+
+# 生成随机哈希值 (8位字母数字组合)
+HASH=$(openssl rand -hex 4)
+echo "Using commit hash: $HASH"
 
 # 使用 Docker Buildx 构建镜像，同时标记为 latest 和 VERSION，支持多架构
 docker buildx build \
   --no-cache \
   --platform linux/amd64,linux/arm64 \
+  --build-arg VERSION=$VERSION \
+  --build-arg HASH=$HASH \
   -t ${HUB_USER}/${HUB_REPO}:$VERSION \
-  -t ${HUB_USER}/${HUB_REPO} . \
+  -t ${HUB_USER}/${HUB_REPO}:latest . \
   --push \
   --progress=plain
 

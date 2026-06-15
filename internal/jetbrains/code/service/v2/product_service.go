@@ -80,17 +80,12 @@ func getOrNone(s string) string {
 	return s
 }
 
-// ProductService handles product-related operations.
+// Product operations.
 //
-// GORM is safe for concurrent use, so the service holds no state and no lock —
-// an earlier RWMutex caused all reads to block while FetchLatest held the write
-// lock for the duration of a multi-minute HTTP scrape.
-type ProductService struct{}
-
-// NewProductService creates a new product service
-func NewProductService() *ProductService {
-	return &ProductService{}
-}
+// GORM is safe for concurrent use, so these are plain package funcs — an
+// earlier ProductService wrapper held an RWMutex that blocked all reads while
+// FetchLatestProducts held the write lock for the duration of a multi-minute
+// HTTP scrape.
 
 func listProducts() ([]types.Product, error) {
 	var products []types.Product
@@ -112,8 +107,8 @@ func upsertProducts(products []*types.Product) error {
 	return err
 }
 
-// GetAll retrieves all products
-func (s *ProductService) GetAll() ([]types.Product, error) {
+// GetAllProducts retrieves all products from the database.
+func GetAllProducts() ([]types.Product, error) {
 	products, err := listProducts()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get products: %w", err)
@@ -121,8 +116,8 @@ func (s *ProductService) GetAll() ([]types.Product, error) {
 	return products, nil
 }
 
-// GetByCode retrieves a product by its code
-func (s *ProductService) GetByCode(code string) (*types.Product, error) {
+// GetProductByCode retrieves a product by its code.
+func GetProductByCode(code string) (*types.Product, error) {
 	products, err := listProducts()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get products: %w", err)
@@ -137,8 +132,8 @@ func (s *ProductService) GetByCode(code string) (*types.Product, error) {
 	return nil, fmt.Errorf("product not found: %s", code)
 }
 
-// FetchLatest fetches the latest products from external source
-func (s *ProductService) FetchLatest() error {
+// FetchLatestProducts scrapes the upstream product catalog and upserts it.
+func FetchLatestProducts() error {
 	client := getHTTPClient()
 	req, err := http.NewRequest("GET", "https://data.services.jetbrains.com/products", nil)
 	if err != nil {
@@ -196,14 +191,8 @@ func (s *ProductService) FetchLatest() error {
 	return nil
 }
 
-// PluginService handles plugin-related operations.
-// See ProductService for why no lock is held.
-type PluginService struct{}
-
-// NewPluginService creates a new plugin service
-func NewPluginService() *PluginService {
-	return &PluginService{}
-}
+// Plugin operations. See the comment above the product funcs for why no lock
+// is held.
 
 func listPlugins() ([]types.Plugin, error) {
 	var plugins []types.Plugin
@@ -225,8 +214,8 @@ func upsertPlugins(plugins []*types.Plugin) error {
 	return err
 }
 
-// GetAll retrieves all plugins
-func (s *PluginService) GetAll() ([]types.Plugin, error) {
+// GetAllPlugins retrieves all plugins from the database.
+func GetAllPlugins() ([]types.Plugin, error) {
 	plugins, err := listPlugins()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get plugins: %w", err)
@@ -257,8 +246,8 @@ func getUserAgent() string {
 	return userAgents[rand.Intn(len(userAgents))]
 }
 
-// GetByCode retrieves a plugin by its code
-func (s *PluginService) GetByCode(code string) (*types.Plugin, error) {
+// GetPluginByCode retrieves a plugin by its code.
+func GetPluginByCode(code string) (*types.Plugin, error) {
 	plugins, err := listPlugins()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get plugins: %w", err)
@@ -274,7 +263,7 @@ func (s *PluginService) GetByCode(code string) (*types.Plugin, error) {
 }
 
 // fetchPlugins fetches plugins from external source with pagination
-func (s *PluginService) fetchPlugins(pricingModel string) ([]*types.Plugin, error) {
+func fetchPlugins(pricingModel string) ([]*types.Plugin, error) {
 	client := getHTTPClient()
 
 	// Phase 1: Fetch all plugin IDs with pagination
@@ -437,17 +426,16 @@ func (s *PluginService) fetchPlugins(pricingModel string) ([]*types.Plugin, erro
 	return allPlugins, nil
 }
 
-// FetchLatest fetches the latest plugins from external source
-func (s *PluginService) FetchLatest() error {
-	// First fetch paid plugins
-	paidPlugins, err := s.fetchPlugins("PAID")
+// FetchLatestPlugins scrapes the upstream plugin catalog (paid + freemium)
+// and upserts it.
+func FetchLatestPlugins() error {
+	paidPlugins, err := fetchPlugins("PAID")
 	if err != nil {
 		logger.Error("Error fetching paid plugins:", err)
 		return err
 	}
 
-	// Then fetch freemium plugins
-	freemiumPlugins, err := s.fetchPlugins("FREEMIUM")
+	freemiumPlugins, err := fetchPlugins("FREEMIUM")
 	if err != nil {
 		logger.Error("Error fetching freemium plugins:", err)
 		return err

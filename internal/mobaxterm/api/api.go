@@ -5,7 +5,6 @@ import (
 	"bytes"
 	"fmt"
 	"license/internal/logger"
-	"license/internal/mobaxterm/entity"
 	"license/internal/utils/useragent"
 	v1 "license/internal/v1"
 	"net/http"
@@ -28,9 +27,7 @@ const (
 	licenseCacheMaxSize = 5000             // 最大缓存许可证数量
 	licenseCacheTTL     = 10 * time.Minute // 许可证缓存TTL
 	versionCacheMaxAge  = 5 * time.Minute  // 版本缓存时间
-	zipBufferPoolSize   = 100              // ZIP缓冲池大小
 	cleanupInterval     = 2 * time.Minute  // 清理间隔
-	maxConcurrency      = 150              // 最大并发数
 )
 
 // LicenseCacheEntry 许可证缓存条目
@@ -91,17 +88,7 @@ type Controller struct {
 
 	// 对象池
 	zipBufferPool     sync.Pool
-	bytesBufferPool   sync.Pool
-	licenseEntityPool sync.Pool
 	stringBuilderPool sync.Pool
-
-	// 清理任务控制
-	cleanupTicker   *time.Ticker
-	cleanupStopChan chan struct{}
-
-	// 限流器
-	requestLimiter chan struct{}
-	maxConcurrency int
 
 	// Base64编码表（预计算）
 	variantBase64Map map[int]byte
@@ -117,12 +104,9 @@ var (
 func NewMobaXtermController() *Controller {
 	controllerOnce.Do(func() {
 		ctrl := &Controller{
-			licenseCache:    &LicenseCache{},
-			versionCache:    &VersionCache{},
-			stats:           &PerformanceStats{LastCleanup: time.Now()},
-			cleanupStopChan: make(chan struct{}),
-			requestLimiter:  make(chan struct{}, maxConcurrency),
-			maxConcurrency:  maxConcurrency,
+			licenseCache: &LicenseCache{},
+			versionCache: &VersionCache{},
+			stats:        &PerformanceStats{LastCleanup: time.Now()},
 		}
 
 		// 初始化预计算的Base64映射表
@@ -158,20 +142,6 @@ func (oc *Controller) initObjectPools() {
 		},
 	}
 
-	// 字节缓冲池
-	oc.bytesBufferPool = sync.Pool{
-		New: func() interface{} {
-			return bytes.NewBuffer(make([]byte, 0, 256))
-		},
-	}
-
-	// 许可证实体对象池
-	oc.licenseEntityPool = sync.Pool{
-		New: func() interface{} {
-			return &entity.License{}
-		},
-	}
-
 	// 字符串构建器池
 	oc.stringBuilderPool = sync.Pool{
 		New: func() interface{} {
@@ -184,15 +154,10 @@ func (oc *Controller) initObjectPools() {
 
 // startCleanupTask 启动定期清理任务
 func (oc *Controller) startCleanupTask() {
-	oc.cleanupTicker = time.NewTicker(cleanupInterval)
+	ticker := time.NewTicker(cleanupInterval)
 	go func() {
-		for {
-			select {
-			case <-oc.cleanupTicker.C:
-				oc.cleanupExpiredCache()
-			case <-oc.cleanupStopChan:
-				return
-			}
+		for range ticker.C {
+			oc.cleanupExpiredCache()
 		}
 	}()
 }
@@ -713,38 +678,6 @@ func (oc *Controller) ClearCache(c *gin.Context) {
 	})
 }
 
-// RateLimitMiddleware 限流中间件
-func (oc *Controller) RateLimitMiddleware() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		select {
-		case oc.requestLimiter <- struct{}{}:
-			defer func() { <-oc.requestLimiter }()
-			c.Next()
-		default:
-			var memStats runtime.MemStats
-			runtime.ReadMemStats(&memStats)
-
-			loadLevel := "critical"
-			if runtime.NumGoroutine() < 500 {
-				loadLevel = "high"
-			}
-
-			c.Header("Retry-After", "5")
-			c.Header("X-Rate-Limit-Limit", fmt.Sprintf("%d", oc.maxConcurrency))
-			c.Header("X-Rate-Limit-Remaining", "0")
-			c.Header("X-Load-Level", loadLevel)
-
-			c.JSON(http.StatusTooManyRequests, gin.H{
-				"error":           "Rate limit exceeded",
-				"message":         "Server is currently under high load, please retry after 5 seconds",
-				"load_level":      loadLevel,
-				"max_concurrency": oc.maxConcurrency,
-			})
-			c.Abort()
-		}
-	}
-}
-
 // ForceGC 强制垃圾回收
 func (oc *Controller) ForceGC(c *gin.Context) {
 	var beforeStats, afterStats runtime.MemStats
@@ -763,12 +696,3 @@ func (oc *Controller) ForceGC(c *gin.Context) {
 	})
 }
 
-// Shutdown 优雅关闭
-func (oc *Controller) Shutdown() {
-	if oc.cleanupTicker != nil {
-		oc.cleanupTicker.Stop()
-	}
-	if oc.cleanupStopChan != nil {
-		close(oc.cleanupStopChan)
-	}
-}

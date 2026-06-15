@@ -10,12 +10,7 @@ import (
 func InitCron() {
 	c := cron.New(cron.WithSeconds())
 
-	jetbrainsTask := task.NewTask()
-
-	// Add scheduled task
-	_, err := c.AddFunc("0 0 1 * * ?", func() {
-		jetbrainsTask.FetchProductLatest()
-	})
+	_, err := c.AddFunc("0 0 1 * * ?", task.FetchProductLatest)
 	if err != nil {
 		logger.Error("Failed to add cron job:", err)
 	}

@@ -1,8 +1,5 @@
 package constant
 
-// ServerConstant holds various constants related to the server configuration.
-type ServerConstant struct{}
-
 // ServerVersion defines the current version of the server.
 const ServerVersion = "3.2.4"
 

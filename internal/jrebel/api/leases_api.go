@@ -77,14 +77,6 @@ type LeasesController struct {
 	signatureCache *SignatureCache   // 签名缓存
 	stats          *PerformanceStats // 性能统计
 	mu             sync.RWMutex      // 读写锁
-
-	// 清理任务控制
-	cleanupTicker   *time.Ticker
-	cleanupStopChan chan struct{}
-
-	// 限流器
-	requestLimiter chan struct{}
-	maxConcurrency int
 }
 
 // 全局实例
@@ -97,13 +89,9 @@ var (
 func NewLeasesController() (*LeasesController, error) {
 	var initError error
 	controllerInstanceOnce.Do(func() {
-		maxConcurrency := 100 // 最大并发数
 		controller := &LeasesController{
-			signatureCache:  &SignatureCache{},
-			stats:           &PerformanceStats{LastCleanup: time.Now()},
-			cleanupStopChan: make(chan struct{}),
-			requestLimiter:  make(chan struct{}, maxConcurrency),
-			maxConcurrency:  maxConcurrency,
+			signatureCache: &SignatureCache{},
+			stats:          &PerformanceStats{LastCleanup: time.Now()},
 		}
 
 		// 预解析RSA私钥
@@ -143,15 +131,10 @@ func (lc *LeasesController) initPrivateKey() error {
 
 // startCleanupTask 启动定期清理任务
 func (lc *LeasesController) startCleanupTask() {
-	lc.cleanupTicker = time.NewTicker(cleanupInterval)
+	ticker := time.NewTicker(cleanupInterval)
 	go func() {
-		for {
-			select {
-			case <-lc.cleanupTicker.C:
-				lc.cleanupExpiredCache()
-			case <-lc.cleanupStopChan:
-				return
-			}
+		for range ticker.C {
+			lc.cleanupExpiredCache()
 		}
 	}()
 }
@@ -507,50 +490,6 @@ func (lc *LeasesController) ClearCache(c *gin.Context) {
 		"message":         "Cache cleared successfully",
 		"cleared_entries": cleared,
 	})
-}
-
-// Shutdown 优雅关闭
-func (lc *LeasesController) Shutdown() {
-	if lc.cleanupTicker != nil {
-		lc.cleanupTicker.Stop()
-	}
-	if lc.cleanupStopChan != nil {
-		close(lc.cleanupStopChan)
-	}
-}
-
-// RateLimitMiddleware 限流中间件
-func (lc *LeasesController) RateLimitMiddleware() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		select {
-		case lc.requestLimiter <- struct{}{}:
-			// 获取到令牌，继续处理
-			defer func() { <-lc.requestLimiter }() // 处理完成后释放令牌
-			c.Next()
-		default:
-			// 无法获取令牌，返回限流响应
-			var memStats runtime.MemStats
-			runtime.ReadMemStats(&memStats)
-
-			loadLevel := "critical"
-			if runtime.NumGoroutine() < 500 {
-				loadLevel = "high"
-			}
-
-			c.Header("Retry-After", "5")
-			c.Header("X-Rate-Limit-Limit", fmt.Sprintf("%d", lc.maxConcurrency))
-			c.Header("X-Rate-Limit-Remaining", "0")
-			c.Header("X-Load-Level", loadLevel)
-
-			c.JSON(http.StatusTooManyRequests, gin.H{
-				"error":           "Rate limit exceeded",
-				"message":         "Server is currently under high load, please retry after 5 seconds",
-				"load_level":      loadLevel,
-				"max_concurrency": lc.maxConcurrency,
-			})
-			c.Abort()
-		}
-	}
 }
 
 // ForceGC 强制垃圾回收（调试用）

@@ -154,8 +154,7 @@ func (g *LicenseGenerator) getCodesFromDatabase() []string {
 	}
 
 	// Get product codes
-	productService := NewProductService()
-	products, err := productService.GetAll()
+	products, err := GetAllProducts()
 	if err == nil {
 		for _, product := range products {
 			codes = append(codes, product.ProductCode)
@@ -165,8 +164,7 @@ func (g *LicenseGenerator) getCodesFromDatabase() []string {
 	}
 
 	// Get plugin codes
-	pluginService := NewPluginService()
-	plugins, err := pluginService.GetAll()
+	plugins, err := GetAllPlugins()
 	if err == nil {
 		for _, plugin := range plugins {
 			codes = append(codes, plugin.PluginCode)

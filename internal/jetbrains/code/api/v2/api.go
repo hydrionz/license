@@ -14,17 +14,13 @@ import (
 
 // Controller handles JetBrains license API endpoints
 type Controller struct {
-	generator      *v2.LicenseGenerator
-	productService *v2.ProductService
-	pluginService  *v2.PluginService
+	generator *v2.LicenseGenerator
 }
 
 // NewController creates a new JetBrains controller
 func NewController() *Controller {
 	return &Controller{
-		generator:      v2.NewLicenseGenerator(),
-		productService: v2.NewProductService(),
-		pluginService:  v2.NewPluginService(),
+		generator: v2.NewLicenseGenerator(),
 	}
 }
 
@@ -67,9 +63,8 @@ func (c *Controller) GetPowerConfig(ctx *gin.Context) {
 
 // FetchProductsLatest fetches the latest products
 func (c *Controller) FetchProductsLatest(ctx *gin.Context) {
-	// Run in background
 	go func() {
-		if err := c.productService.FetchLatest(); err != nil {
+		if err := v2.FetchLatestProducts(); err != nil {
 			logger.Error("Failed to fetch latest products", err)
 		}
 	}()
@@ -82,9 +77,8 @@ func (c *Controller) FetchProductsLatest(ctx *gin.Context) {
 
 // FetchPluginsLatest fetches the latest plugins
 func (c *Controller) FetchPluginsLatest(ctx *gin.Context) {
-	// Run in background
 	go func() {
-		if err := c.pluginService.FetchLatest(); err != nil {
+		if err := v2.FetchLatestPlugins(); err != nil {
 			logger.Error("Failed to fetch latest plugins", err)
 		}
 	}()
@@ -97,7 +91,7 @@ func (c *Controller) FetchPluginsLatest(ctx *gin.Context) {
 
 // GetProducts returns all available products
 func (c *Controller) GetProducts(ctx *gin.Context) {
-	products, err := c.productService.GetAll()
+	products, err := v2.GetAllProducts()
 	if err != nil {
 		logger.Error("Failed to get products", err)
 		v1.HandleError(ctx, http.StatusInternalServerError, "Failed to get products")
@@ -108,7 +102,7 @@ func (c *Controller) GetProducts(ctx *gin.Context) {
 
 // GetPlugins returns all available plugins
 func (c *Controller) GetPlugins(ctx *gin.Context) {
-	plugins, err := c.pluginService.GetAll()
+	plugins, err := v2.GetAllPlugins()
 	if err != nil {
 		logger.Error("Failed to get plugins", err)
 		v1.HandleError(ctx, http.StatusInternalServerError, "Failed to get plugins")
